@@ -9,10 +9,8 @@ async function bootstrap() {
     .setTitle('NIMASA performance monitoring system')
     .setDescription('Performance monitoring system')
     .setVersion('1.0')
-    .addTag('NIMASA')
-    .addTag('performance')
-    .addTag('evaluation')
-    .addTag('CDCU')
+    .addBearerAuth()
+    .setContact('Ladanski Solutions', 'https://ladanski.com.ng', 'contact@ladanski.com.ng')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
