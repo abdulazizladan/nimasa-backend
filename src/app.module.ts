@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       logging: ['query', 'error', 'warn'], // Enable detailed SQL query logging
       logger: 'advanced-console' // Use advanced console logger
     }),
+    UserModule,
+    AuthModule
   ]
 })
 export class AppModule {}
