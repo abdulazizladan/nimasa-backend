@@ -56,7 +56,7 @@ export class UserController {
    * Accessible by admin and director.
    * @access admin, director
    */
-  @Roles(Role.admin, Role.director)
+  @Roles(Role.admin)
   @ApiOkResponse({description: "User stats found"})
   @ApiUnauthorizedResponse({ description: 'Unauthorized. JWT is missing or invalid.' })
   @ApiForbiddenResponse({ description: 'Forbidden. Only admin and director roles allowed.' })
@@ -71,7 +71,7 @@ export class UserController {
    * Accessible by admin and director.
    * @access admin, director
    */
-  @Roles(Role.admin, Role.director)
+  @Roles(Role.admin)
   @ApiOkResponse({ description: 'Users fetched successfully' })
   @ApiNoContentResponse({ description: 'No users found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized. JWT is missing or invalid.' })

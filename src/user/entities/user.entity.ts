@@ -34,7 +34,7 @@ export class User {
     /**
      * Role of the user (admin, director, manager)
      */
-    @Column({type: 'text', enum: Role, default: Role.manager})
+    @Column({type: 'text', enum: Role, default: Role.guest})
     @IsEnum(Role)
     role: Role;
 
