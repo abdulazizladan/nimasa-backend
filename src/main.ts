@@ -4,7 +4,6 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   const config = new DocumentBuilder()
     .setTitle('NIMASA performance monitoring system')
     .setDescription('Performance monitoring system')
@@ -14,8 +13,8 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
   app.enableCors();
+  
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap(); 

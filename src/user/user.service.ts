@@ -92,7 +92,6 @@ export class UserService {
       relations: [
         'info', 
         'contact',
-        'station',
       ],
       select: [
         'email', 
