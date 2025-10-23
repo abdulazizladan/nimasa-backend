@@ -126,8 +126,8 @@ export class UserService {
             relations: [
               'info',
               'contact',
-              'reports',
-              'tickets',
+              //'reports',
+              //'tickets',
             ]
           }
         );
@@ -161,7 +161,14 @@ export class UserService {
    */
   async findByEmail(email: string): Promise<any> {
     try{
-      const user = await this.userRepository.findOne({where: {email}})
+      const user = await this.userRepository.findOne(
+        {
+          where: 
+          {
+            email
+          }
+        }
+      )
       if(user) {
         return {
           success: true, 
@@ -201,7 +208,18 @@ export class UserService {
       );
       if(user) {
         await this.userRepository.update(email, updateUserDto);
-        const updated = await this.userRepository.findOne({ where: { email }, relations: ['info','contact','station']});
+        const updated = await this.userRepository.findOne(
+          { 
+            where: { 
+              email 
+            }, 
+            relations: 
+            [
+              'info',
+              'contact'
+            ]
+          }
+        );
         return {
           success: true,
           data: updated,
