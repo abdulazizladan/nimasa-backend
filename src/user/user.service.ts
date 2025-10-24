@@ -1,9 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { Info } from './entities/info.entity';
 import { Contact } from './entities/contact.entity';
 import { Status } from './enums/status.enum';
@@ -197,47 +197,32 @@ export class UserService {
    * @param updateUserDto - DTO containing updated user data
    * @returns An object indicating success or failure and a message
    */
-  async update(email: string, updateUserDto: UpdateUserDto) {
-    try {
-      const user = await this.userRepository.findOne(
-        {
-          where: {
-            email: email
-          }
-        }
-      );
-      if(user) {
-        await this.userRepository.update(email, updateUserDto);
-        const updated = await this.userRepository.findOne(
-          { 
-            where: { 
-              email 
-            }, 
-            relations: 
-            [
-              'info',
-              'contact'
-            ]
-          }
-        );
-        return {
-          success: true,
-          data: updated,
-          message: 'User updated successfully'
-        }
-      }else{
-        return {
-          success: false,
-          message: `User with email ${email} not found`
-        }
-      }
+  async update(email: string, updateUserDto: UpdateUserDto): Promise<User> {
+    // 1. Attempt the update directly based on the email (where clause).
+    const updateResult: UpdateResult = await this.userRepository.update(
+      { email: email },
+      updateUserDto,
+    );
+
+    // 2. Check the result: If no row was affected, the user was not found.
+    //    Throwing a NestJS exception handles the 404 HTTP response automatically.
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`User with email "${email}" not found.`);
     }
-    catch (error) {
-      return {
-        success: false,
-        message: error.message
-      }
+
+    // 3. If the update succeeded, fetch the full, updated entity with relations.
+    const updatedUser = await this.userRepository.findOne({
+      where: { email },
+      relations: ['info', 'contact'],
+    });
+
+    // Since 'affected' was greater than 0, we can safely assume updatedUser exists.
+    // But updatedUser may still be null at the type level. Add a check to ensure type safety.
+    if (!updatedUser) {
+      // This is a very rare edge case but should be handled for correctness.
+      throw new NotFoundException(`User with email "${email}" not found after update.`);
     }
+    return updatedUser;
   }
 
   /**

@@ -1,35 +1,50 @@
 import { KPI } from "./kpi.entity";
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Organization } from "./organization.entity";
 
 @Entity({name: 'Department'})
 export class Department {
 
-    @PrimaryColumn({})
-    code: string;
+    // Using PrimaryGeneratedColumn is often better practice for relational IDs
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-    @Column({})
+    @Column({ unique: true })
+    code: string; // Keeping 'code' as unique identifier
+
+    @Column({ length: 100 })
     name: string;
 
-    @Column({})
-    description?: string;
+    @Column({ nullable: true, type: 'text' })
+    description?: string; // Explicitly marked nullable
 
-    @Column({})
-    head: string;
+    @Column({ length: 50 })
+    head: string; // Assuming 'head' is the name of the department head
 
-    @Column({})
-    directorEmail?: string;
+    @Column({ nullable: true, length: 100 })
+    directorEmail?: string; // Explicitly marked nullable
 
-    @Column({})
-    contactPhone?: string;
+    @Column({ nullable: true, length: 20 })
+    contactPhone?: string; // Explicitly marked nullable
+
+    // The foreign key relationship
+    @ManyToOne(() => Organization, organization => organization.departments, { onDelete: 'CASCADE' })
+    organization: Organization;
 
     // Strategic alignment
-    strategicPillars: string[]; // NIMASA strategic pillars
-    keyPerformanceIndicators: KPI[];
+    //strategicPillars: string[]; // NIMASA strategic pillars
+
+    //keyPerformanceIndicators: KPI[];
     
     // Additional NIMASA-specific fields
-    maritimeDomain?: 'safety' | 'security' | 'environment' | 'commercial' | 'administration';
-    budgetAllocation?: number;
-    actualSpending?: number;
+    //maritimeDomain?: 'safety' | 'security' | 'environment' | 'commercial' | 'administration';
+
+    //budgetAllocation?: number;
+
+    //actualSpending?: number;
+
+    //@ManyToOne((type) => Organization, organization => organization.departments)
+    //organization: Organization;
 }
 
 /**
