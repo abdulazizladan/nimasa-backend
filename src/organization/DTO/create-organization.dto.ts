@@ -42,4 +42,4 @@ export class CreateOrganizationDto {
   @IsOptional()
   @IsUrl({}, { message: 'Logo must be a valid URL.' })
   logo?: string;
-}
+} 
