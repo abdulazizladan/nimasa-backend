@@ -7,6 +7,7 @@ import { CreateOrganizationDto } from './DTO/create-organization.dto';
 import { CreateDepartmentDto } from './DTO/create-department.dto';
 import { UpdateOrganizationDto } from './DTO/update-organization.dto';
 import { UpdateDepartmentDto } from './DTO/update-department.dto';
+import { PriorityArea } from './entities/priority-area.entity';
 
 @Injectable()
 export class OrganizationService {
@@ -15,6 +16,8 @@ export class OrganizationService {
     private readonly departmentRepository: Repository<Department>,
     @InjectRepository(Organization) // Inject Organization Repository to check FK constraint
     private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(PriorityArea)
+    private readonly priorityAreaRepository: Repository<PriorityArea>
   ) {}
 
   /**
@@ -83,7 +86,12 @@ export class OrganizationService {
   async findOne(code: string): Promise<Organization> {
     const organization = await this.organizationRepository.findOne({
       where: { code },
-      relations: ['departments'], // Always load departments for single view
+      relations: [
+        'departments',
+        'priorityAreas',
+        'priorityAreas.deliverables',
+        'priorityAreas.deliverables.outputIndicators'
+      ], // Always load departments for single view
     });
 
     if (!organization) {
@@ -177,5 +185,17 @@ export class OrganizationService {
 
     // 4. Fetch and return the fully updated department entity
     return this.findOneDepartment(id);
+  }
+
+  /**
+   * 
+   */
+  getPriorityAreas() {
+    const priorityAreas = this.priorityAreaRepository.find({
+      relations: [
+        'deliverables'
+      ]
+    })
+    return priorityAreas;
   }
 }

@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { Department } from "./department.entity";
+import { PriorityArea } from "./priority-area.entity";
 
 @Entity({name: 'Organization'})
 export class Organization {
@@ -21,4 +22,7 @@ export class Organization {
 
     @OneToMany(() => Department, department => department.organization)
     departments: Department[];
+
+    @OneToMany((type) => PriorityArea, priorityArea => priorityArea.organization)
+    priorityAreas: PriorityArea[];
 }

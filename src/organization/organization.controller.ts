@@ -115,4 +115,10 @@ export class OrganizationController {
     // This uses the selected update logic from the service
     return this.organizationService.updateDepartment(id, updateDepartmentDto);
   }
+
+  @Get('priorityAreas')
+  @ApiOperation({ summary: 'Retrieve all priority areas' })
+  getPriorityAreas() {
+    this.organizationService.getPriorityAreas()
+  }
 }
