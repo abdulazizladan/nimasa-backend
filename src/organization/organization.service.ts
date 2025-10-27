@@ -123,6 +123,7 @@ export class OrganizationService {
     return this.findOne(code);
   }
 
+
   /**
    * Removes an organization by its unique code.
    * @param code The unique code of the organization to remove.
@@ -187,15 +188,15 @@ export class OrganizationService {
     return this.findOneDepartment(id);
   }
 
-  /**
-   * 
+    /**
+   * Retrieves all priority areas.
+   * @returns An array of PriorityArea entities.
    */
-  getPriorityAreas() {
-    const priorityAreas = this.priorityAreaRepository.find({
-      relations: [
-        'deliverables'
-      ]
-    })
-    return priorityAreas;
+  async findAllPriorityAreas(): Promise<PriorityArea[]> {
+    // Use the injected PriorityArea repository to find all priority areas.
+    return this.priorityAreaRepository.find({
+      relations: ['deliverables']
+      // Optional: Add sorting or relations if needed, e.g., order: { name: 'ASC' }
+    });
   }
 }

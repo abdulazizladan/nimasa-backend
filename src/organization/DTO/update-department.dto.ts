@@ -10,3 +10,4 @@ export class UpdateDepartmentDto extends PartialType(CreateDepartmentDto) {
   @IsString()
   organizationCode?: string;
 }
+ 

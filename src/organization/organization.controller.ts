@@ -7,15 +7,24 @@ import { CreateDepartmentDto } from './DTO/create-department.dto';
 import { UpdateDepartmentDto } from './DTO/update-department.dto';
 import { Organization } from './entities/organization.entity';
 import { Department } from './entities/department.entity';
+import { PriorityArea } from './entities/priority-area.entity';
 
 @ApiTags('Organization & Departments') // Tag the whole controller for grouping in Swagger UI
-@Controller('organization')
+//@Controller('organization')
+@Controller()
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
 
   // ====================================================================
   // ORGANIZATION ENDPOINTS (/organization)
   // ====================================================================
+
+  @Get('priority-area')
+  @ApiOperation({ summary: 'Retrieve a list of all priority areas' })
+  @ApiResponse({ status: 200, description: 'List of priority areas.', type: [PriorityArea] })
+  findAllPriorityAreas(): Promise<PriorityArea[]> {
+    return this.organizationService.findAllPriorityAreas();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -114,11 +123,5 @@ export class OrganizationController {
   ): Promise<Department> {
     // This uses the selected update logic from the service
     return this.organizationService.updateDepartment(id, updateDepartmentDto);
-  }
-
-  @Get('priorityAreas')
-  @ApiOperation({ summary: 'Retrieve all priority areas' })
-  getPriorityAreas() {
-    this.organizationService.getPriorityAreas()
   }
 }
