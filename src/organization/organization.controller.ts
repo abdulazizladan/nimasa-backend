@@ -53,7 +53,7 @@ export class OrganizationController {
     return this.organizationService.findAll(shouldInclude);
   }
 
-  @Get(':code')
+  @Get('organization/:code')
   @ApiOperation({ summary: 'Retrieve a single organization by its unique code' })
   @ApiParam({ name: 'code', description: 'Unique code of the organization' })
   @ApiResponse({ status: 200, description: 'The found organization.', type: Organization })
