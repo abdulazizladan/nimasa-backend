@@ -19,7 +19,7 @@ export class UserService {
     private readonly infoRepository: Repository<Info>,
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>
-  ) {}
+  ) { }
 
   /**
    * Creates a new user in the database, including related contact and info.
@@ -28,25 +28,13 @@ export class UserService {
    */
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await User.hashPassword(createUserDto.password);
-    try {
-      const user = this.userRepository.create({
-        ...createUserDto,
-        password: hashedPassword,
-        contact: await this.contactRepository.save(createUserDto.contact),
-        info: await this.infoRepository.save(createUserDto.info)
-      });
-      await this.userRepository.save(user);
-      return {
-        success: true,
-        data: user,
-        message: 'User added successfully'
-      }
-    } catch (error) {
-      return {
-        success: false,
-        messahe: error.message
-      }
-    }
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+      contact: await this.contactRepository.save(createUserDto.contact),
+      info: await this.infoRepository.save(createUserDto.info)
+    });
+    return this.userRepository.save(user);
   }
 
   /**
@@ -55,30 +43,20 @@ export class UserService {
    */
   async getStats() {
     const totalUsers = await this.userRepository.count()
-    const activeUsers = await this.userRepository.countBy({status: Status.active})
-    const suspendedUsers = await this.userRepository.countBy({status: Status.suspended})
-    const removedUsers = await this.userRepository.countBy({status: Status.removed})
-    const adminCount = await this.userRepository.countBy({role: Role.admin})
-    const guestsCount = await this.userRepository.countBy({role: Role.guest})
-    try {
-      return {
-        success: true,
-        data: {
-          total: totalUsers,
-          active: activeUsers,
-          suspended: suspendedUsers,
-          removed: removedUsers,
-          admin: adminCount,
-          guests: guestsCount
-        },
-        message: "Status fetched successfully"
-      }
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message
-      }
-    }
+    const activeUsers = await this.userRepository.countBy({ status: Status.active })
+    const suspendedUsers = await this.userRepository.countBy({ status: Status.suspended })
+    const removedUsers = await this.userRepository.countBy({ status: Status.removed })
+    const adminCount = await this.userRepository.countBy({ role: Role.admin })
+    const guestsCount = await this.userRepository.countBy({ role: Role.guest })
+
+    return {
+      total: totalUsers,
+      active: activeUsers,
+      suspended: suspendedUsers,
+      removed: removedUsers,
+      admin: adminCount,
+      guests: guestsCount
+    };
   }
 
   /**
@@ -88,29 +66,18 @@ export class UserService {
   async findAll() {
     const users = await this.userRepository.find({
       relations: [
-        'info', 
+        'info',
         'contact',
       ],
       select: [
-        'email', 
-        'contact', 
-        'info', 
+        'email',
+        'contact',
+        'info',
         'role',
         'status'
       ]
     });
-    try {
-      return {
-        success: true,
-        data: users,
-        message: users.length === 0 ? 'No users found' : 'Users fetched successfully'
-      }
-    } catch (error) {
-      return{
-        success: false,
-        message: 'Error fetching users'
-      }
-    }
+    return users;
   }
 
   /**
@@ -118,40 +85,22 @@ export class UserService {
    * @param email - The email of the user
    * @returns An object with the user or not found message
    */
-  async findOne(email: string): Promise<any> {
-    try {
-      const user = await this.userRepository.findOne(
-        {
-          where: {email}, 
-            relations: [
-              'info',
-              'contact',
-              //'reports',
-              //'tickets',
-            ]
-          }
-        );
-      if(user) {
-        return {
-          success: true,
-          data: user,
-          message: "User found"
-        }
-      }else {
-        return {
-          success: false,
-          data: null,
-          message: "User not found"
-        }
-      }
-      
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message
-      }
+  async findOne(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: [
+        'info',
+        'contact',
+        //'reports',
+        //'tickets',
+      ]
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email "${email}" not found.`);
     }
-    
+
+    return user;
   }
 
   /**
@@ -159,36 +108,16 @@ export class UserService {
    * @param email - The email of the user
    * @returns An object with the user or a message if not found
    */
-  async findByEmail(email: string): Promise<any> {
-    try{
-      const user = await this.userRepository.findOne(
-        {
-          where: 
-          {
-            email
-          }
-        }
-      )
-      if(user) {
-        return {
-          success: true, 
-          data: user,
-          message: "User found"
-        }
-      } else {
-        return {
-          success: false, 
-          data: null,
-          message: "User not found"
-        }
-      }
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message
-      }
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email "${email}" not found.`);
     }
-    
+
+    return user;
   }
 
   /**
@@ -230,30 +159,13 @@ export class UserService {
    * @param email - The email of the user
    * @returns An object indicating success or failure and a message
    */
-  async remove(email: string) {
-    const user  = await this.userRepository.findOne(
-      {
-        where: { email }
+  async remove(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException(`User with email "${email}" not found.`);
     }
-  )
-    try {
-      if(user) {
-        await this.userRepository.remove(user);
-        return {
-          success: true,
-          message: "User deleted successfully"
-        }
-      } else {
-        return {
-          success: false,
-          message: `User with email ${email} not found`
-        }
-      }
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message
-      }
-    }
+
+    await this.userRepository.remove(user);
   }
 }

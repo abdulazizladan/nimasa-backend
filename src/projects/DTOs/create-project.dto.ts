@@ -10,6 +10,8 @@ import {
     IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateMilestoneDto } from './create-milestone.dto';
+import { CreateCommentDto } from './create-comment.dto';
 
 export class CreateProjectDto {
     @ApiProperty({
@@ -123,4 +125,9 @@ export class CreateProjectDto {
     @IsString()
     @IsNotEmpty()
     status: string;
+
+    milestones: CreateMilestoneDto[]; // Include Milestones
+    comments: CreateCommentDto[];     // Include Comments
+    // challenges: ChallengeDto[]; // Existing
+    //recommendations: RecommendationDto[]; // Existing
 }

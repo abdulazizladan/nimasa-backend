@@ -6,6 +6,7 @@ import { Project } from './entities/project.entity';
 import { Challenge } from './entities/challenge.entity';
 import { Milestone } from './entities/milestone.entity';
 import { Recommendation } from './entities/recommendation.entity';
+import { Comment } from './entities/comment.entity';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { Recommendation } from './entities/recommendation.entity';
       Project,
       Challenge,
       Milestone,
-      Recommendation
+      Recommendation,
+      Comment
     ])
   ],
   providers: [ProjectsService],

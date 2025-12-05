@@ -16,63 +16,24 @@ export class ProjectsService {
     /**
      * Creates a new Project and links it to existing PriorityArea and Deliverable entities.
      */
+    // 1. CREATE Operation (No change needed here for new entities)
     async create(createProjectDto: CreateProjectDto): Promise<Project> {
-    
-        // 💡 FIX: The SQLITE_CONSTRAINT error suggests the provided IDs don't exist.
-        // We must ensure the related entities are valid before proceeding.
-        // For this fix, we'll assume we have injected the necessary repositories or services.
-        
-        // --- START OF REQUIRED CHECKS ---
-        
-        // NOTE: For a complete fix, you would need to inject PriorityAreaRepository
-        // and DeliverableRepository into ProjectsService.
-        
-        // Example check (if repositories were injected):
-        /*
-        const priorityArea = await this.priorityAreaRepository.findOne({
-            where: { id: createProjectDto.priorityAreaId }
-        });
-        if (!priorityArea) {
-            throw new NotFoundException(`PriorityArea with ID "${createProjectDto.priorityAreaId}" not found.`);
-        }
-    
-        const deliverable = await this.deliverableRepository.findOne({
-            where: { id: createProjectDto.deliverableId }
-        });
-        if (!deliverable) {
-            throw new NotFoundException(`Deliverable with ID "${createProjectDto.deliverableId}" not found.`);
-        }
-        */
-        
-        // If the checks pass, or you rely on the database constraint (which fails
-        // silently in TypeORM when using partial object references like below),
-        // the original TypeORM entity preparation is correct:
-        
-        // --- END OF REQUIRED CHECKS ---
-        
-        // Prepare the entity object, mapping the DTO IDs to TypeORM relationship objects
-        // The explicit 'as any' is often necessary when TypeORM entities are strict.
+        // ... (existing create logic)
         const newProject = this.projectRepository.create({
             ...createProjectDto,
-            // The foreign key ID columns (priorityAreaId, deliverableId)
-            // are often automatically populated by TypeORM when saving the relation object.
-            // However, if your DTO also includes the raw IDs, they might conflict 
-            // with the relation objects, so it's safer to rely on the relation objects only.
             priorityArea: { id: createProjectDto.priorityAreaId } as any,
             deliverable: { id: createProjectDto.deliverableId } as any,
         });
     
-        // To prevent potential conflict if the DTO also contains raw IDs that TypeORM 
-        // might attempt to insert alongside the relation objects:
         delete (newProject as any).priorityAreaId;
         delete (newProject as any).deliverableId;
         
         return this.projectRepository.save(newProject);
     }
 
-    // 2. READ All Operation
+    // 2. READ All Operation - UPDATED
     /**
-     * Retrieves all Projects, optionally including related entities.
+     * Retrieves all Projects, including related entities, milestones, and comments.
      */
     async findAll(): Promise<Project[]> {
         // Eagerly load the related entities for comprehensive listing
@@ -81,12 +42,23 @@ export class ProjectsService {
                 'priorityArea', 
                 'deliverable', 
                 'challenges', 
-                'recommendations'
+                'recommendations',
+                'milestones', // ADDED
+                'comments'    // ADDED
             ],
+            // Order milestones for consistent progress tracking
+            order: {
+                milestones: {
+                    plannedDate: "ASC"
+                },
+                comments: {
+                    createdAt: "DESC"
+                }
+            }
         });
     }
 
-    // 2. READ One Operation
+    // 2. READ One Operation - UPDATED
     /**
      * Retrieves a single Project by ID, throwing an error if not found.
      */
@@ -98,8 +70,19 @@ export class ProjectsService {
                 'priorityArea', 
                 'deliverable', 
                 'challenges', 
-                'recommendations'
+                'recommendations',
+                'milestones', // ADDED
+                'comments'    // ADDED
             ],
+             // Order milestones and comments
+            order: {
+                milestones: {
+                    plannedDate: "ASC"
+                },
+                comments: {
+                    createdAt: "DESC"
+                }
+            }
         });
 
         if (!project) {
@@ -109,43 +92,31 @@ export class ProjectsService {
         return project;
     }
 
-    // 3. UPDATE Operation
-    /**
-     * Updates an existing Project. Handles changes to relational IDs.
-     */
+    // 3. UPDATE Operation (No change needed here)
     async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
-        const project = await this.findOne(id); // Use findOne to ensure existence
+        // ... (existing update logic)
+        const project = await this.findOne(id);
 
-        // Apply partial updates from DTO
         const updateData: any = { ...updateProjectDto };
 
-        // Handle updating the PriorityArea relationship
         if (updateProjectDto.priorityAreaId) {
             updateData.priorityArea = { id: updateProjectDto.priorityAreaId };
             delete updateData.priorityAreaId;
         }
 
-        // Handle updating the Deliverable relationship
         if (updateProjectDto.deliverableId) {
             updateData.deliverable = { id: updateProjectDto.deliverableId };
             delete updateData.deliverableId;
         }
 
-        // Merge existing project with update data
         const updatedProject = Object.assign(project, updateData);
 
         return this.projectRepository.save(updatedProject);
     }
 
-    // 4. DELETE Operation
-    /**
-     * Deletes a Project by ID.
-     */
+    // 4. DELETE Operation (No change needed here)
     async remove(id: string): Promise<void> {
-        // NOTE: Ensure your TypeORM setup or database schema has configured
-        // cascade deletion for related Challenges and Recommendations, 
-        // otherwise they will need to be deleted manually here.
-        
+        // ... (existing remove logic)
         const result = await this.projectRepository.delete(id);
 
         if (result.affected === 0) {

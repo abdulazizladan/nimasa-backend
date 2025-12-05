@@ -6,6 +6,9 @@ import { OrganizationModule } from './organization/organization.module';
 import { ConfigModule } from '@nestjs/config';
 import { ProjectsModule } from './projects/projects.module';
 import { ReportModule } from './report/report.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PerformanceModule } from './performance/performance.module';
 
 @Module({
   imports: [
@@ -22,9 +25,10 @@ import { ReportModule } from './report/report.module';
     AuthModule,
     OrganizationModule,
     ProjectsModule,
-    ReportModule
+    ReportModule,
+    PerformanceModule
   ],
-  controllers: [],
-  providers: []
+  controllers: [AppController],
+  providers: [AppService]
 })
 export class AppModule {}

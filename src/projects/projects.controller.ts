@@ -9,7 +9,7 @@ import {
     HttpCode,
     HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './DTOs/create-project.dto';
 import { UpdateProjectDto } from './DTOs/update-project.dto';
@@ -26,6 +26,10 @@ export class ProjectsController {
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create a new Project' })
+    @ApiBody({
+        description: 'Payload required to create a new Project',
+        type: CreateProjectDto,
+    })
     @ApiResponse({ 
         status: 201, 
         description: 'The Project has been successfully created.', 
@@ -73,6 +77,10 @@ export class ProjectsController {
         name: 'id', 
         description: 'The UUID of the Project to update', 
         type: 'string' 
+    })
+    @ApiBody({
+        description: 'Partial payload with the fields that need to be updated.',
+        type: UpdateProjectDto,
     })
     @ApiResponse({ 
         status: 200, 

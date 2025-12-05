@@ -7,74 +7,57 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-    
-  constructor(
-        private usersService: UserService,
-        private jwtService: JwtService
-      ) {}
-    
-      /**
-       * 
-       * @param userData 
-       * @returns 
-       */
-      async validateUser(loginDto: LoginDto): Promise<Omit<User, 'password'> | null> {
-        // Retrieve user including the password field
-        const user = await this.usersService.findByEmail(loginDto.email);
-        if (user && await bcrypt.compare(loginDto.password, user.data.password)) {
-          const { password, ...result } = user;
-          console.log(result)
-          return result;
-        }
-        return null;
-        /**const isPasswordValid = await bcrypt.compare(loginDto.password, user.data.password);
-        if (!isPasswordValid) {
-          return null;
-        }
-        // Return user without password
-        const { password, ...result } = user;
-        return result;**/
-      }
-    
-      /**
-       *
-       * @param loginDto
-       * @returns
-       */
-      async login(loginDto: LoginDto) {
 
-        const user = await this.usersService.findByEmail(loginDto.email);
-        if (!user) {
-          throw new UnauthorizedException();
-        } else{
-          const match = await bcrypt.compare(loginDto.password, user.data.password);
-          if (!match) {
-            throw new UnauthorizedException();
-          }else{
-            const payload = { 
-              email: user.data.email, 
-              //password: user.data.password, 
-              sub: user.data.id, 
-              role: user.data.role 
-            };
-            return {
-              access_token: this.jwtService.sign(payload)
-            }
-          }
-        } 
-        /**try{
-        const user = await this.validateUser(loginDto);
-        if (!user) {
-          throw new UnauthorizedException('Invalid credentials');
-        } else
-        return {
-          access_token: this.jwtService.sign({ ...user }),
-        };
-        } catch (error) {
-          return {
-            success: false,
-            message: error.message
-          }
-        }**/
+  constructor(
+    private usersService: UserService,
+    private jwtService: JwtService
+  ) { }
+
+  /**
+   * 
+   * @param userData 
+   * @returns 
+   */
+  async validateUser(loginDto: LoginDto): Promise<any> {
+    // Retrieve user including the password field
+    try {
+      const user = await this.usersService.findByEmail(loginDto.email);
+      // Since findByEmail throws if not found, we will have a user here
+      if (user && await bcrypt.compare(loginDto.password, user.password)) {
+        const { password, ...result } = user;
+        // console.log(result)
+        return result;
       }
+    } catch (error) {
+      // If user not found, return null to indicate invalid credentials
+      return null;
+    }
+    return null;
+  }
+
+  /**
+   *
+   * @param loginDto
+   * @returns
+   */
+  async login(loginDto: LoginDto) {
+    try {
+      const user = await this.usersService.findByEmail(loginDto.email);
+      const match = await bcrypt.compare(loginDto.password, user.password);
+      if (!match) {
+        throw new UnauthorizedException();
+      }
+
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        role: user.role
+      };
+      return {
+        access_token: this.jwtService.sign(payload)
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+  }
 }

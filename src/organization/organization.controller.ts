@@ -11,9 +11,9 @@ import { PriorityArea } from './entities/priority-area.entity';
 
 @ApiTags('Organization & Departments') // Tag the whole controller for grouping in Swagger UI
 //@Controller('organization')
-@Controller()
+@Controller('organization')
 export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) {}
+  constructor(private readonly organizationService: OrganizationService) { }
 
   // ====================================================================
   // ORGANIZATION ENDPOINTS (/organization)
@@ -38,10 +38,10 @@ export class OrganizationController {
 
   @Get()
   @ApiOperation({ summary: 'Retrieve a list of all organizations' })
-  @ApiQuery({ 
-    name: 'includeDepartments', 
-    required: false, 
-    type: 'boolean', 
+  @ApiQuery({
+    name: 'includeDepartments',
+    required: false,
+    type: 'boolean',
     description: 'If true, related departments will be included in the response (default: false).',
   })
   @ApiResponse({ status: 200, description: 'List of organizations.', type: [Organization] })
@@ -53,7 +53,7 @@ export class OrganizationController {
     return this.organizationService.findAll(shouldInclude);
   }
 
-  @Get('organization/:code')
+  @Get(':code')
   @ApiOperation({ summary: 'Retrieve a single organization by its unique code' })
   @ApiParam({ name: 'code', description: 'Unique code of the organization' })
   @ApiResponse({ status: 200, description: 'The found organization.', type: Organization })
