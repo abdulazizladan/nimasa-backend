@@ -1,98 +1,251 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NIMASA Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Backend API for the Nigerian Maritime Administration and Safety Agency (NIMASA) organizational management system. This application provides comprehensive endpoints for managing organizations, departments, projects, performance tracking, and reporting.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A robust NestJS-based REST API that powers the NIMASA organizational management platform. The system enables efficient management of organizational structures, departmental operations, project tracking, performance monitoring, and comprehensive reporting capabilities.
 
-## Project setup
+## Features
 
+### 🏢 Organization Management
+- Create and manage organizations with unique codes
+- Hierarchical department structure
+- Priority area assignments
+- Organization-wide reporting and analytics
+
+### 👥 Department Management
+- Department creation and updates
+- Department-specific performance tracking
+- Task and project assignment
+- Department analytics and visualizations
+
+### 📊 Project Management
+- Project creation and lifecycle management
+- Task tracking and assignment
+- Project status monitoring
+- Progress reporting
+
+### 📈 Performance Tracking
+- Department performance metrics
+- Monthly performance trends
+- Task completion analytics
+- Performance rating system
+
+### 📋 Reporting
+- Organization performance reports
+- Department-specific reports
+- Custom report generation
+- Data export capabilities
+
+### 🔐 Authentication & Authorization
+- JWT-based authentication
+- Role-based access control (RBAC)
+- User management
+- Secure password handling with bcrypt
+
+## Tech Stack
+
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.x
+- **Database**: SQLite with TypeORM
+- **Authentication**: Passport.js with JWT strategy
+- **Validation**: class-validator & class-transformer
+- **API Documentation**: Swagger/OpenAPI
+- **Testing**: Jest
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- SQLite3
+
+## Installation
+
+1. Clone the repository:
 ```bash
-$ npm install
+git clone <repository-url>
+cd backend
 ```
 
-## Compile and run the project
-
+2. Install dependencies:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+3. Create a `.env` file in the root directory:
+```env
+# Application
+PORT=3000
+NODE_ENV=development
 
-```bash
-# unit tests
-$ npm run test
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRATION=1d
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Database
+DATABASE_PATH=./db.sqlite
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Running the Application
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Development mode with hot-reload
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start:prod
+
+# Debug mode
+npm run start:debug
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The API will be available at `http://localhost:3000`
 
-## Resources
+## API Documentation
 
-Check out a few resources that may come in handy when working with NestJS:
+Once the application is running, access the interactive Swagger API documentation at:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
+http://localhost:3000/api
+```
 
-## Support
+### Main API Endpoints
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#### Authentication
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+- `GET /auth/profile` - Get current user profile
 
-## Stay in touch
+#### Organizations
+- `GET /organization` - List all organizations
+- `POST /organization` - Create organization
+- `GET /organization/:code` - Get organization by code
+- `PATCH /organization/:code` - Update organization
+- `DELETE /organization/:code` - Delete organization
+- `GET /organization/priority-area` - List priority areas
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+#### Departments
+- `POST /organization/department` - Create department
+- `GET /organization/department/:id` - Get department by ID
+- `PATCH /organization/department/:id` - Update department
+
+#### Projects
+- `GET /projects` - List all projects
+- `POST /projects` - Create project
+- `GET /projects/:id` - Get project by ID
+- `PATCH /projects/:id` - Update project
+- `DELETE /projects/:id` - Delete project
+
+#### Performance
+- `GET /performance/department/:code` - Get department performance
+- `GET /performance/department/:code/monthly` - Monthly performance trends
+
+#### Reports
+- `GET /report/organization/:code` - Organization performance report
+- `GET /report/department/:id` - Department performance report
+
+## Project Structure
+
+```
+src/
+├── auth/              # Authentication module
+│   ├── guards/        # Auth guards
+│   ├── strategies/    # Passport strategies
+│   └── dto/           # Auth DTOs
+├── user/              # User management module
+│   ├── entities/      # User entity
+│   └── dto/           # User DTOs
+├── organization/      # Organization & Department module
+│   ├── entities/      # Organization, Department, PriorityArea entities
+│   └── DTO/           # Organization DTOs
+├── projects/          # Project management module
+│   ├── entities/      # Project, Task entities
+│   └── DTOs/          # Project DTOs
+├── performance/       # Performance tracking module
+│   ├── entities/      # Performance entities
+│   └── dto/           # Performance DTOs
+├── report/            # Reporting module
+└── main.ts            # Application entry point
+```
+
+## Database
+
+The application uses SQLite for data persistence with TypeORM as the ORM. The database file is located at `db.sqlite` in the root directory.
+
+### Auto-synchronization
+
+⚠️ **Warning**: `synchronize: true` is enabled in development for automatic schema updates. **Disable this in production** and use migrations instead.
+
+## Testing
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+
+# Watch mode
+npm run test:watch
+```
+
+## Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Docker Support
+
+Build and run using Docker:
+
+```bash
+# Build image
+docker build -t nimasa-backend .
+
+# Run container
+docker run -p 3000:3000 nimasa-backend
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Application port | `3000` |
+| `NODE_ENV` | Environment mode | `development` |
+| `JWT_SECRET` | JWT signing secret | Required |
+| `JWT_EXPIRATION` | JWT token expiration | `1d` |
+| `DATABASE_PATH` | SQLite database path | `./db.sqlite` |
+
+## Security Considerations
+
+- JWT tokens are used for authentication
+- Passwords are hashed using bcrypt
+- Input validation using class-validator
+- CORS enabled for frontend integration
+- Environment variables for sensitive data
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Write/update tests
+4. Ensure all tests pass
+5. Submit a pull request
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED - Private/Proprietary
+
+## Support
+
+For issues and questions, please contact the development team.
