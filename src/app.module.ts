@@ -9,10 +9,11 @@ import { ReportModule } from './report/report.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PerformanceModule } from './performance/performance.module';
+import { DeliverablesModule } from './deliverables/deliverables.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true}),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: __dirname + '/../db.sqlite', // Use absolute path to database file
@@ -26,9 +27,10 @@ import { PerformanceModule } from './performance/performance.module';
     OrganizationModule,
     ProjectsModule,
     ReportModule,
-    PerformanceModule
+    PerformanceModule,
+    DeliverablesModule
   ],
   controllers: [AppController],
   providers: [AppService]
 })
-export class AppModule {}
+export class AppModule { }
