@@ -17,37 +17,37 @@ export class Project {
     @ManyToOne((type) => Deliverable, deliverable => deliverable.projects)
     deliverable: Deliverable;
 
-    @Column({ nullable: true })
+    @Column({ type: 'date', nullable: true })
     startDate: Date;
 
-    @Column()
+    @Column({ type: 'varchar' })
     title: string;
 
-    @Column()
+    @Column({ type: 'text' })
     objective: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     budgetCode: string;
 
-    @Column()
+    @Column({ type: 'float', default: 0 })
     amountAppropriated: number;
 
-    @Column()
+    @Column({ type: 'float', default: 0 })
     totalCost: number;
 
-    @Column({default: "NGN"})
+    @Column({ type: 'varchar', default: 'NGN' })
     currency: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     foreignComponent: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     fundingSource: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     projectType: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     status: string;
 
     // New One-to-Many relationship for Milestones

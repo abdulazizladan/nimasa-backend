@@ -34,21 +34,21 @@ export class User {
     /**
      * Role of the user (admin, director, manager)
      */
-    @Column({type: 'text', enum: Role, default: Role.guest})
+    @Column({ type: 'varchar', enum: Role, default: Role.guest })
     @IsEnum(Role)
     role: Role;
 
     /**
      * Status of the user (active, inactive, etc.)
      */
-    @Column({default: Status.active})
+    @Column({ type: 'varchar', enum: Status, default: Status.active })
     @IsEnum(Status)
     status: Status;
 
     /**
      * Date when the user was created
      */
-    @CreateDateColumn({default: Date.now()})
+    @CreateDateColumn()
     @IsDate()
     createdAt: Date;
 

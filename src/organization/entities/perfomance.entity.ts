@@ -1,13 +1,22 @@
-import { Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'Performance'})
 export class Performance {
-     // Performance metrics
-     @PrimaryGeneratedColumn('uuid')
-     id: string;
-     performanceScore: number;
-     totalTargets: number;
-     completedTargets: number;
-     pendingTargets: number;
-     overdueTargets: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column({ type: 'float', default: 0 })
+    performanceScore: number;
+
+    @Column({ type: 'int', default: 0 })
+    totalTargets: number;
+
+    @Column({ type: 'int', default: 0 })
+    completedTargets: number;
+
+    @Column({ type: 'int', default: 0 })
+    pendingTargets: number;
+
+    @Column({ type: 'int', default: 0 })
+    overdueTargets: number;
 }
