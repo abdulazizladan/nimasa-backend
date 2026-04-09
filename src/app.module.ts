@@ -18,10 +18,13 @@ import { DeliverablesModule } from './deliverables/deliverables.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: __dirname + '/../' + (configService.get<string>('DATABASE_FILE') || 'db.sqlite'),
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
         entities: [__dirname + '/**/entities/*.entity{.ts,.js}'],
         synchronize: true,
+        ssl: {
+          rejectUnauthorized: false
+        }
       }),
     }),
     UserModule,
