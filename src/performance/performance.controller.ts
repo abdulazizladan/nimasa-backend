@@ -17,7 +17,7 @@ import { DepartmentMonthlyPerformance } from './entities/department-performance.
 import { DepartmentMonthlySummaryDto } from './DTO/department-monthly-summary.dto';
 
 @ApiTags('Department Performance')
-@Controller('performance')
+@Controller('performance-bond-deliverables')
 export class PerformanceController {
   constructor(private readonly performanceService: PerformanceService) {}
 

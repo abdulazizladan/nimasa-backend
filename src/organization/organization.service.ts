@@ -140,10 +140,20 @@ export class OrganizationService {
   }
 
   /**
-   * Retrieves a single department by its primary ID.
+   * Find all departments
+   * @returns List of all departments
+   */
+  async findAllDepartments(): Promise<Department[]> {
+    return this.departmentRepository.find({
+      relations: ['organization'],
+    });
+  }
+
+  /**
+   * Find a single department by its ID.
    * @param id The UUID of the department.
-   * @returns The department entity.
-   * @throws NotFoundException if the department does not exist.
+   * @returns The found department.
+   * @throws NotFoundException if the department is not found.
    */
   async findOneDepartment(id: string): Promise<Department> {
     const department = await this.departmentRepository.findOne({

@@ -9,14 +9,13 @@ import { Organization } from './entities/organization.entity';
 import { Department } from './entities/department.entity';
 import { PriorityArea } from './entities/priority-area.entity';
 
-@ApiTags('Organization & Departments') // Tag the whole controller for grouping in Swagger UI
-//@Controller('organization')
-@Controller('organization')
+@ApiTags('Agencies & Organization')
+@Controller('agencies')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) { }
 
   // ====================================================================
-  // ORGANIZATION ENDPOINTS (/organization)
+  // ORGANIZATION ENDPOINTS (/agencies)
   // ====================================================================
 
   @Get('priority-area')
@@ -83,45 +82,5 @@ export class OrganizationController {
   @ApiResponse({ status: 404, description: 'Organization not found.' })
   remove(@Param('code') code: string): Promise<void> {
     return this.organizationService.remove(code);
-  }
-
-  // ====================================================================
-  // DEPARTMENT ENDPOINTS (Nested Resource - /organization/department)
-  // ====================================================================
-
-  @Post('department')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new department under an existing organization' })
-  @ApiBody({ type: CreateDepartmentDto, description: 'Requires an existing organizationCode.' })
-  @ApiResponse({ status: 201, description: 'Department successfully created.', type: Department })
-  @ApiResponse({ status: 404, description: 'Organization not found (Invalid organizationCode).' })
-  createDepartment(@Body() createDepartmentDto: CreateDepartmentDto): Promise<Department> {
-    return this.organizationService.createDepartment(createDepartmentDto);
-  }
-
-  @Get('department/:id')
-  @ApiOperation({ summary: 'Retrieve a single department by its ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the department' })
-  @ApiResponse({ status: 200, description: 'The found department.', type: Department })
-  @ApiResponse({ status: 404, description: 'Department not found.' })
-  findOneDepartment(
-    @Param('id', ParseUUIDPipe) id: string, // Validate ID as UUID
-  ): Promise<Department> {
-    // The service method is findOneDepartment, but we map to a clear route
-    return this.organizationService.findOneDepartment(id);
-  }
-
-  @Patch('department/:id')
-  @ApiOperation({ summary: 'Update an existing department' })
-  @ApiParam({ name: 'id', description: 'UUID of the department to update' })
-  @ApiBody({ type: UpdateDepartmentDto })
-  @ApiResponse({ status: 200, description: 'The successfully updated department.', type: Department })
-  @ApiResponse({ status: 404, description: 'Department or Organization not found.' })
-  updateDepartment(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDepartmentDto: UpdateDepartmentDto,
-  ): Promise<Department> {
-    // This uses the selected update logic from the service
-    return this.organizationService.updateDepartment(id, updateDepartmentDto);
   }
 }

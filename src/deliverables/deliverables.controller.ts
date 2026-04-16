@@ -18,10 +18,10 @@ import { CreateMonthlySubmissionDto } from './DTO/create-monthly-submission.dto'
 import { UpdateMonthlySubmissionDto } from './DTO/update-monthly-submission.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@ApiTags('Deliverables')
+@ApiTags('Agency Deliverables')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('deliverables')
+@Controller('agency-deliverables')
 export class DeliverablesController {
     constructor(private readonly deliverablesService: DeliverablesService) { }
 

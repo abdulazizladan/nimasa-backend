@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { OrganizationController } from './organization.controller';
+import { DepartmentsController } from './departments.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Organization } from './entities/organization.entity';
 import { Department } from './entities/department.entity';
@@ -19,6 +20,6 @@ import { Deliverable } from './entities/deliverable.entity';
     )
   ],
   providers: [OrganizationService],
-  controllers: [OrganizationController]
+  controllers: [OrganizationController, DepartmentsController]
 })
 export class OrganizationModule {}  

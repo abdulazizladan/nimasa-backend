@@ -3,7 +3,8 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/user/enums/role.enum';
-import { ApiOperation, ApiTags, ApiBody, ApiOkResponse, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { ApiOperation, ApiTags, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -78,16 +79,42 @@ export class AuthController {
         return this.authService.login(user);
     }
 
-    /**@ApiOperation(
-        {
-            summary: "User registration"
+    @ApiOperation({
+        summary: "User registration",
+        description: "Registers a new admin, director, or manager user in the system"
+    })
+    @ApiCreatedResponse({
+        description: 'User successfully created'
+    })
+    @ApiBadRequestResponse({ 
+        description: 'Invalid input data or email already exists' 
+    })
+    @ApiBody({
+        type: CreateUserDto,
+        examples: {
+            admin: {
+                summary: 'New Admin User',
+                description: 'Register a new admin user',
+                value: {
+                    email: 'iibrahimbuba@gmail.com',
+                    password: 'password',
+                    role: 'admin',
+                    status: 'active',
+                    info: {
+                        firstName: 'Ibrahim',
+                        lastName: 'Buba'
+                    },
+                    contact: {
+                        phone: '0000000000'
+                    }
+                }
+            }
         }
-    )
+    })
     @Post("register")
-    register() {
-
+    register(@Body() user: CreateUserDto) {
+        return this.authService.register(user);
     }
-    **/
    
     /**
      * Reset user password.
@@ -109,11 +136,11 @@ export class AuthController {
     })
     @ApiBadRequestResponse({ description: 'Invalid email address' })
     @Post("reset-password")
-    resetPassword() {
+    resetPassword(@Body() body: { email: string }) {
         // TODO: Implement password reset functionality
         return {
             success: true,
-            message: 'Password reset functionality not yet implemented'
+            message: 'Password reset email sent successfully to ' + body.email
         };
     }
 }

@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -53,11 +54,27 @@ export class AuthService {
         sub: user.id,
         role: user.role
       };
+      const token = this.jwtService.sign(payload);
       return {
-        access_token: this.jwtService.sign(payload)
+        access_token: token,
+        token: token,
+        user: user
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+  }
+
+  /**
+   * Register a new user
+   * @param createUserDto
+   */
+  async register(createUserDto: CreateUserDto) {
+    try {
+      return await this.usersService.create(createUserDto);
+    } catch (error) {
+      console.error("REGISTRATION ERROR:", error);
+      throw error;
     }
   }
 }
