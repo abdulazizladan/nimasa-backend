@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Info } from "./info.entity";
-import { Role } from "../enums/role.enum";
+import { Role } from "src/auth/enums/role.enum";
 import * as bcrypt from "bcrypt";
 import { Contact } from "./contact.entity";
 import { Status } from "../enums/status.enum";
@@ -57,14 +57,14 @@ export class User {
      */
     @OneToOne((type) => Info, info => info.user) 
     @IsOptional()
-    info: Info;
+    info: Relation<Info>;
 
     /**
      * One-to-one relation to Contact entity (user's contact info)
      */
     @OneToOne((type) => Contact, contact => contact.user)
     @IsOptional()
-    contact: Contact;
+    contact: Relation<Contact>;
 
     
 

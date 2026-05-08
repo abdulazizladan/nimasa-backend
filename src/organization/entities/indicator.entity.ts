@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Deliverable } from "./deliverable.entity";
 
 @Entity({name: 'OutputIndicator'})
@@ -11,5 +11,5 @@ export class OutputIndicator {
     description: string;
 
     @ManyToOne((type) => Deliverable, deliverable => deliverable.outputIndicators)
-    deliverable: Deliverable;
+    deliverable: Relation<Deliverable>;
 }

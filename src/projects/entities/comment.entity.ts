@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, Relation } from "typeorm";
 import { Project } from "./project.entity";
 
 @Entity({ name: 'Comment' })
@@ -18,5 +18,5 @@ export class Comment {
 
     // Relate Comment to Project (Many-to-One)
     @ManyToOne(() => Project, project => project.comments)
-    project: Project;
+    project: Relation<Project>;
 }

@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Project } from "./project.entity";
 
 @Entity({name: 'Recommendation'})
@@ -11,5 +11,5 @@ export class Recommendation {
     description: string
 
     @ManyToOne((type) => Project, project => project.recommendations)
-    project: Project;
+    project: Relation<Project>;
 }

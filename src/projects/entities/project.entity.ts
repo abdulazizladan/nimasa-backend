@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Challenge } from "./challenge.entity";
 import { Recommendation } from "./recommendation.entity";
 import { PriorityArea } from "src/organization/entities/priority-area.entity";
@@ -12,10 +12,10 @@ export class Project {
     id: string;
 
     @ManyToOne((type) => PriorityArea, priorityArea => priorityArea.projects)
-    priorityArea: PriorityArea;
+    priorityArea: Relation<PriorityArea>;
 
     @ManyToOne((type) => Deliverable, deliverable => deliverable.projects)
-    deliverable: Deliverable;
+    deliverable: Relation<Deliverable>;
 
     @Column({ type: 'date', nullable: true })
     startDate: Date;
@@ -52,15 +52,15 @@ export class Project {
 
     // New One-to-Many relationship for Milestones
     @OneToMany(() => Milestone, milestone => milestone.project)
-    milestones: Milestone[];
+    milestones: Relation<Milestone>[];
 
     // New One-to-Many relationship for Comments
     @OneToMany(() => Comment, comment => comment.project)
-    comments: Comment[];
+    comments: Relation<Comment>[];
 
     @OneToMany((type) => Challenge, challenge => challenge.project)
-    challenges: Challenge[];
+    challenges: Relation<Challenge>[];
 
     @OneToMany((type) => Recommendation, recommendation => recommendation.project)
-    recommendations: Recommendation[];
+    recommendations: Relation<Recommendation>[];
 }

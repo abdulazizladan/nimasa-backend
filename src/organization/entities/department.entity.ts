@@ -1,5 +1,5 @@
 import { KPI } from "./kpi.entity";
-import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Organization } from "./organization.entity";
 
 @Entity({name: 'Department'})
@@ -29,7 +29,7 @@ export class Department {
 
     // The foreign key relationship
     @ManyToOne(() => Organization, organization => organization.departments, { onDelete: 'CASCADE' })
-    organization: Organization;
+    organization: Relation<Organization>;
 
     // Strategic alignment
     //strategicPillars: string[]; // NIMASA strategic pillars

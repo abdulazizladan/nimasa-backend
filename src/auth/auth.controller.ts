@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { User } from 'src/user/entities/user.entity';
-import { Role } from 'src/user/enums/role.enum';
+import { Role } from './enums/role.enum';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { ApiOperation, ApiTags, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 

@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, Relation } from "typeorm";
 import { Project } from "./project.entity";
 
 @Entity({name: 'Milestone'})
@@ -21,5 +21,5 @@ export class Milestone {
 
     // Relate Milestone to Project (Many-to-One)
     @ManyToOne(() => Project, project => project.milestones)
-    project: Project;
+    project: Relation<Project>;
 }

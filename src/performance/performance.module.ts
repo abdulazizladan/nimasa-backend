@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PerformanceService } from './performance.service';
 import { PerformanceController } from './performance.controller';
 import { DepartmentMonthlyPerformance } from './entities/department-performance.entity';
+import { PerformanceBondKPI } from './entities/performance-bond-kpi.entity';
 import { Department } from '../organization/entities/department.entity';
 
 @Module({
@@ -10,6 +11,7 @@ import { Department } from '../organization/entities/department.entity';
     TypeOrmModule.forFeature(
       [
         DepartmentMonthlyPerformance, 
+        PerformanceBondKPI,
         Department
       ]
     )

@@ -7,7 +7,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import { Info } from './entities/info.entity';
 import { Contact } from './entities/contact.entity';
 import { Status } from './enums/status.enum';
-import { Role } from './enums/role.enum';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Injectable()
 export class UserService {

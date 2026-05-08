@@ -1,21 +1,21 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { IsString, IsNumber } from "class-validator";
 
 export class CreateInfoDto {
-    
+
     @ApiProperty({})
     @IsString()
     firstName: string;
-    
+
     @ApiProperty({})
     @IsString()
     lastName: string;
-    
+
     @ApiProperty({})
-    @IsString()
+    @IsNumber()
     age: number;
 
     @ApiProperty({})
     @IsString()
     image: string;
-}
+} 

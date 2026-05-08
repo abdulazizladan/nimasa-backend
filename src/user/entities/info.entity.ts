@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, Relation } from "typeorm";
 import { User } from "./user.entity";
 import { IsString, IsOptional, IsNumber } from "class-validator";
 
@@ -38,5 +38,5 @@ export class Info {
      */
     @JoinColumn({name: 'user_email', referencedColumnName: "email"})
     @OneToOne((type) => User, user => user.info, { cascade: true, onDelete: 'CASCADE'})
-    user: User;
+    user: Relation<User>;
 }

@@ -7,6 +7,8 @@ import { CreateDepartmentPerformanceDto } from './DTO/create-department-performa
 import { UpdateDepartmentPerformanceDto } from './DTO/update-department-performance.dto';
 import { QueryDepartmentPerformanceDto } from './DTO/query-department-performance.dto';
 import { DepartmentMonthlySummaryDto } from './DTO/department-monthly-summary.dto';
+import { PerformanceBondKPI } from './entities/performance-bond-kpi.entity';
+import { CreatePerformanceBondKpiDto, UpdatePerformanceBondKpiDto } from './DTO/performance-bond-kpi.dto';
 
 @Injectable()
 export class PerformanceService {
@@ -15,6 +17,8 @@ export class PerformanceService {
     private readonly departmentPerformanceRepo: Repository<DepartmentMonthlyPerformance>,
     @InjectRepository(Department)
     private readonly departmentRepo: Repository<Department>,
+    @InjectRepository(PerformanceBondKPI)
+    private readonly kpiRepo: Repository<PerformanceBondKPI>,
   ) {}
 
   private async getDepartmentOrThrow(id: string): Promise<Department> {
@@ -155,5 +159,34 @@ export class PerformanceService {
       currentMonth: buildSummaryItem(currentYear, currentMonth, currentRecord ?? undefined),
       previousMonth: buildSummaryItem(previousYear, previousMonth, previousRecord ?? undefined),
     };
+  }
+
+  // Performance Bond KPI CRUD
+  async findAllKPIs(): Promise<PerformanceBondKPI[]> {
+    return this.kpiRepo.find({ order: { createdAt: 'ASC' } });
+  }
+
+  async findOneKPI(id: string): Promise<PerformanceBondKPI> {
+    const kpi = await this.kpiRepo.findOne({ where: { id } });
+    if (!kpi) {
+      throw new NotFoundException(`KPI with ID "${id}" not found.`);
+    }
+    return kpi;
+  }
+
+  async createKPI(dto: CreatePerformanceBondKpiDto): Promise<PerformanceBondKPI> {
+    const kpi = this.kpiRepo.create(dto);
+    return this.kpiRepo.save(kpi);
+  }
+
+  async updateKPI(id: string, dto: UpdatePerformanceBondKpiDto): Promise<PerformanceBondKPI> {
+    const kpi = await this.findOneKPI(id);
+    Object.assign(kpi, dto);
+    return this.kpiRepo.save(kpi);
+  }
+
+  async removeKPI(id: string): Promise<void> {
+    const kpi = await this.findOneKPI(id);
+    await this.kpiRepo.remove(kpi);
   }
 }

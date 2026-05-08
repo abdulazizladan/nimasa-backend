@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DeliverablesService } from './deliverables.service';
+import { DeliverableCategory } from './entities/deliverable.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
 import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
@@ -16,13 +17,13 @@ export class HighImpactDeliverablesController {
     @Post()
     @ApiOperation({ summary: 'Create a new high impact deliverable' })
     create(@Body() createDeliverableDto: CreateDeliverableDto) {
-        return this.deliverablesService.create(createDeliverableDto);
+        return this.deliverablesService.create(createDeliverableDto, DeliverableCategory.HIGH_IMPACT);
     }
 
     @Get()
     @ApiOperation({ summary: 'Get all high impact deliverables' })
     findAll(@Query() query: QueryDeliverablesDto) {
-        return this.deliverablesService.findAll(query);
+        return this.deliverablesService.findAll(query, DeliverableCategory.HIGH_IMPACT);
     }
 
     @Patch(':id')

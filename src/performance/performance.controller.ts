@@ -1,12 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
-  Patch,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PerformanceService } from './performance.service';
@@ -15,6 +16,8 @@ import { UpdateDepartmentPerformanceDto } from './DTO/update-department-performa
 import { QueryDepartmentPerformanceDto } from './DTO/query-department-performance.dto';
 import { DepartmentMonthlyPerformance } from './entities/department-performance.entity';
 import { DepartmentMonthlySummaryDto } from './DTO/department-monthly-summary.dto';
+import { PerformanceBondKPI } from './entities/performance-bond-kpi.entity';
+import { CreatePerformanceBondKpiDto, UpdatePerformanceBondKpiDto } from './DTO/performance-bond-kpi.dto';
 
 @ApiTags('Department Performance')
 @Controller('performance-bond-deliverables')
@@ -94,5 +97,49 @@ export class PerformanceController {
     @Param('departmentId', ParseUUIDPipe) departmentId: string,
   ): Promise<DepartmentMonthlySummaryDto> {
     return this.performanceService.getDepartmentMonthlySummary(departmentId);
+  }
+
+  // Performance Bond KPI CRUD Endpoints
+  @Get('kpis')
+  @ApiOperation({ summary: 'List all performance bond KPIs' })
+  @ApiResponse({ status: 200, type: [PerformanceBondKPI] })
+  findAllKPIs(): Promise<PerformanceBondKPI[]> {
+    return this.performanceService.findAllKPIs();
+  }
+
+  @Get('kpis/:id')
+  @ApiOperation({ summary: 'Get a specific performance bond KPI' })
+  @ApiParam({ name: 'id', description: 'KPI ID' })
+  @ApiResponse({ status: 200, type: PerformanceBondKPI })
+  findOneKPI(@Param('id') id: string): Promise<PerformanceBondKPI> {
+    return this.performanceService.findOneKPI(id);
+  }
+
+  @Post('kpis')
+  @ApiOperation({ summary: 'Create a new performance bond KPI' })
+  @ApiBody({ type: CreatePerformanceBondKpiDto })
+  @ApiResponse({ status: 201, type: PerformanceBondKPI })
+  createKPI(@Body() dto: CreatePerformanceBondKpiDto): Promise<PerformanceBondKPI> {
+    return this.performanceService.createKPI(dto);
+  }
+
+  @Patch('kpis/:id')
+  @ApiOperation({ summary: 'Update an existing performance bond KPI' })
+  @ApiParam({ name: 'id', description: 'KPI ID' })
+  @ApiBody({ type: UpdatePerformanceBondKpiDto })
+  @ApiResponse({ status: 200, type: PerformanceBondKPI })
+  updateKPI(
+    @Param('id') id: string,
+    @Body() dto: UpdatePerformanceBondKpiDto,
+  ): Promise<PerformanceBondKPI> {
+    return this.performanceService.updateKPI(id, dto);
+  }
+
+  @Delete('kpis/:id')
+  @ApiOperation({ summary: 'Delete a performance bond KPI' })
+  @ApiParam({ name: 'id', description: 'KPI ID' })
+  @ApiResponse({ status: 204 })
+  removeKPI(@Param('id') id: string): Promise<void> {
+    return this.performanceService.removeKPI(id);
   }
 }

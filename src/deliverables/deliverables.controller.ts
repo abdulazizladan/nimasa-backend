@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DeliverablesService } from './deliverables.service';
+import { DeliverableCategory } from './entities/deliverable.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
 import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
@@ -28,13 +29,13 @@ export class DeliverablesController {
     @Post()
     @ApiOperation({ summary: 'Create a new deliverable' })
     create(@Body() createDeliverableDto: CreateDeliverableDto) {
-        return this.deliverablesService.create(createDeliverableDto);
+        return this.deliverablesService.create(createDeliverableDto, DeliverableCategory.AGENCY);
     }
 
     @Get()
     @ApiOperation({ summary: 'Get all deliverables with optional filters' })
     findAll(@Query() query: QueryDeliverablesDto) {
-        return this.deliverablesService.findAll(query);
+        return this.deliverablesService.findAll(query, DeliverableCategory.AGENCY);
     }
 
     @Get('summary')

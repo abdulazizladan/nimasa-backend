@@ -1,10 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Relation } from 'typeorm';
 import { MonthlySubmission } from './monthly-submission.entity';
+
+export enum DeliverableCategory {
+    HIGH_IMPACT = 'HIGH_IMPACT',
+    AGENCY = 'AGENCY',
+}
 
 @Entity('deliverables')
 export class Deliverable {
     @PrimaryGeneratedColumn('uuid')
     id: string;
+
+    @Column({
+        type: 'varchar',
+        enum: DeliverableCategory,
+        default: DeliverableCategory.AGENCY
+    })
+    category: DeliverableCategory;
 
     // Identification
     @Column({ type: 'int' })
@@ -91,7 +103,7 @@ export class Deliverable {
 
     // Relationship with monthly submissions
     @OneToMany(() => MonthlySubmission, submission => submission.deliverable)
-    monthlySubmissions: MonthlySubmission[];
+    monthlySubmissions: Relation<MonthlySubmission>[];
 
     @CreateDateColumn()
     createdAt: Date;

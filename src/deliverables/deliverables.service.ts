@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Deliverable } from './entities/deliverable.entity';
+import { Deliverable, DeliverableCategory } from './entities/deliverable.entity';
 import { MonthlySubmission } from './entities/monthly-submission.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
@@ -18,13 +18,17 @@ export class DeliverablesService {
         private readonly monthlySubmissionRepo: Repository<MonthlySubmission>,
     ) { }
 
-    async create(dto: CreateDeliverableDto): Promise<Deliverable> {
-        const deliverable = this.deliverableRepo.create(dto);
+    async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<Deliverable> {
+        const deliverable = this.deliverableRepo.create({ ...dto, category });
         return this.deliverableRepo.save(deliverable);
     }
 
-    async findAll(query: QueryDeliverablesDto): Promise<Deliverable[]> {
+    async findAll(query: QueryDeliverablesDto, category?: DeliverableCategory): Promise<Deliverable[]> {
         const qb = this.deliverableRepo.createQueryBuilder('d');
+
+        if (category) {
+            qb.andWhere('d.category = :category', { category });
+        }
 
         if (query.ministry) {
             qb.andWhere('d.ministry = :ministry', { ministry: query.ministry });

@@ -1,8 +1,8 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryColumn, Relation } from "typeorm";
 import { Department } from "./department.entity";
 import { PriorityArea } from "./priority-area.entity";
 
-@Entity({name: 'Organization'})
+@Entity({ name: 'Organization' })
 export class Organization {
 
     @PrimaryColumn({ length: 10, unique: true })
@@ -21,8 +21,8 @@ export class Organization {
     isActive: boolean; // Added an active status for better management
 
     @OneToMany(() => Department, department => department.organization)
-    departments: Department[];
+    departments: Relation<Department>[];
 
     @OneToMany((type) => PriorityArea, priorityArea => priorityArea.organization)
-    priorityAreas: PriorityArea[];
+    priorityAreas: Relation<PriorityArea>[];
 }

@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { Deliverable } from "./deliverable.entity";
 import { Organization } from "./organization.entity";
 import { Project } from "src/projects/entities/project.entity";
@@ -12,11 +12,11 @@ export class PriorityArea {
     area: string;
 
     @OneToMany((type) => Deliverable, deliverable => deliverable.priorityArea)
-    deliverables: Deliverable[];
+    deliverables: Relation<Deliverable>[];
 
     @ManyToOne((type) => Organization, organization => organization.priorityAreas)
-    organization: Organization;
+    organization: Relation<Organization>;
 
     @OneToMany((type) => Project, project => project.priorityArea)
-    projects: Project[];
+    projects: Relation<Project>[];
 }

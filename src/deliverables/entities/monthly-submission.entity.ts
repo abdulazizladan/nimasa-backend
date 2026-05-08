@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Relation } from 'typeorm';
 import { Deliverable } from './deliverable.entity';
 
 @Entity('monthly_submissions')
@@ -7,7 +7,7 @@ export class MonthlySubmission {
     id: string;
 
     @ManyToOne(() => Deliverable, deliverable => deliverable.monthlySubmissions, { onDelete: 'CASCADE' })
-    deliverable: Deliverable;
+    deliverable: Relation<Deliverable>;
 
     @Column({ type: 'int' })
     year: number;

@@ -5,7 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { Role } from './enums/role.enum';
+import { Role } from 'src/auth/enums/role.enum';
 import { Roles } from 'src/auth/roles.decorator';
 
 @ApiTags('Users')
@@ -13,7 +13,7 @@ import { Roles } from 'src/auth/roles.decorator';
 @Controller('users')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   /**
    * Create a new user.
@@ -57,10 +57,10 @@ export class UserController {
    * @access admin, director
    */
   @Roles(Role.admin)
-  @ApiOkResponse({description: "User stats found"})
+  @ApiOkResponse({ description: "User stats found" })
   @ApiUnauthorizedResponse({ description: 'Unauthorized. JWT is missing or invalid.' })
   @ApiForbiddenResponse({ description: 'Forbidden. Only admin and director roles allowed.' })
-  @ApiOperation({summary: "Get user stats by role and status"})
+  @ApiOperation({ summary: "Get user stats by role and status" })
   @Get('stats')
   getStats() {
     return this.userService.getStats();
