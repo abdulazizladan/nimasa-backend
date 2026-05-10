@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Deliverable, DeliverableCategory } from './entities/deliverable.entity';
-import { MonthlySubmission } from './entities/monthly-submission.entity';
+import { StrategicDeliverable, DeliverableCategory } from './entities/strategic-deliverable.entity';
+import { DeliverableSubmission } from './entities/deliverable-submission.entity';
+import { PresidentialPriorityArea } from './entities/presidential-priority.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
 import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
@@ -12,18 +13,29 @@ import { UpdateMonthlySubmissionDto } from './DTO/update-monthly-submission.dto'
 @Injectable()
 export class DeliverablesService {
     constructor(
-        @InjectRepository(Deliverable)
-        private readonly deliverableRepo: Repository<Deliverable>,
-        @InjectRepository(MonthlySubmission)
-        private readonly monthlySubmissionRepo: Repository<MonthlySubmission>,
+        @InjectRepository(StrategicDeliverable)
+        private readonly deliverableRepo: Repository<StrategicDeliverable>,
+        @InjectRepository(DeliverableSubmission)
+        private readonly monthlySubmissionRepo: Repository<DeliverableSubmission>,
+        @InjectRepository(PresidentialPriorityArea)
+        private readonly priorityAreaRepo: Repository<PresidentialPriorityArea>,
     ) { }
 
-    async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<Deliverable> {
+    async createPriorityArea(name: string): Promise<PresidentialPriorityArea> {
+        const area = this.priorityAreaRepo.create({ name });
+        return this.priorityAreaRepo.save(area);
+    }
+
+    async findAllPriorityAreas(): Promise<PresidentialPriorityArea[]> {
+        return this.priorityAreaRepo.find({ orderBy: { name: 'ASC' } });
+    }
+
+    async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<StrategicDeliverable> {
         const deliverable = this.deliverableRepo.create({ ...dto, category });
         return this.deliverableRepo.save(deliverable);
     }
 
-    async findAll(query: QueryDeliverablesDto, category?: DeliverableCategory): Promise<Deliverable[]> {
+    async findAll(query: QueryDeliverablesDto, category?: DeliverableCategory): Promise<StrategicDeliverable[]> {
         const qb = this.deliverableRepo.createQueryBuilder('d');
 
         if (category) {
@@ -51,7 +63,7 @@ export class DeliverablesService {
         return qb.getMany();
     }
 
-    async findOne(id: string): Promise<Deliverable> {
+    async findOne(id: string): Promise<StrategicDeliverable> {
         const deliverable = await this.deliverableRepo.findOne({
             where: { id },
             relations: ['monthlySubmissions']
@@ -62,7 +74,7 @@ export class DeliverablesService {
         return deliverable;
     }
 
-    async update(id: string, dto: UpdateDeliverableDto): Promise<Deliverable> {
+    async update(id: string, dto: UpdateDeliverableDto): Promise<StrategicDeliverable> {
         const deliverable = await this.findOne(id);
         Object.assign(deliverable, dto);
         return this.deliverableRepo.save(deliverable);
@@ -92,25 +104,28 @@ export class DeliverablesService {
     async createSubmission(
         deliverableId: string,
         dto: CreateMonthlySubmissionDto
-    ): Promise<MonthlySubmission> {
+    ): Promise<DeliverableSubmission> {
+        console.log('Creating submission for deliverable:', deliverableId, 'with data:', dto);
         const deliverable = await this.deliverableRepo.findOne({ where: { id: deliverableId } });
 
         if (!deliverable) {
+            console.error('Deliverable not found:', deliverableId);
             throw new NotFoundException(`Deliverable with ID "${deliverableId}" not found`);
         }
 
-        // Check if submission already exists for this month/year
+        // Check if submission already exists for this month/year or quarter/year
         const existingSubmission = await this.monthlySubmissionRepo.findOne({
             where: {
                 deliverable: { id: deliverableId },
                 year: dto.year,
-                month: dto.month,
+                ...(dto.month ? { month: dto.month } : {}),
+                ...(dto.quarter ? { quarter: dto.quarter } : {}),
             },
         });
 
         if (existingSubmission) {
             throw new BadRequestException(
-                `Submission for ${dto.month}/${dto.year} already exists. Use update instead.`
+                `Submission for ${dto.month || dto.quarter}/${dto.year} already exists. Use update instead.`
             );
         }
 
@@ -118,17 +133,44 @@ export class DeliverablesService {
             deliverable,
             year: dto.year,
             month: dto.month,
+            quarter: dto.quarter,
             actualValue: dto.actualValue,
+            targetValue: dto.targetValue,
+            supportingDocType: dto.supportingDocType,
             progress: dto.progress,
             keyIssues: dto.keyIssues,
             mdaEfforts: dto.mdaEfforts,
             comments: dto.comments,
         });
 
-        return this.monthlySubmissionRepo.save(submission);
+        const savedSubmission = await this.monthlySubmissionRepo.save(submission);
+
+        // Sync to deliverable JSON for performance viewing
+        if (!deliverable.yearlyPerformance) deliverable.yearlyPerformance = {};
+        const year = dto.year.toString();
+        if (!deliverable.yearlyPerformance[year]) deliverable.yearlyPerformance[year] = {};
+        
+        if (dto.quarter) {
+            const qKey = dto.quarter.toLowerCase();
+            deliverable.yearlyPerformance[year][qKey] = {
+                target: dto.targetValue || 0,
+                actual: dto.actualValue || 0
+            };
+        } else if (dto.month) {
+            // For monthly, we might want to aggregate or just store
+            // Let's store by month too if needed
+            deliverable.yearlyPerformance[year][`m${dto.month}`] = {
+                target: dto.targetValue || 0,
+                actual: dto.actualValue || 0
+            };
+        }
+
+        await this.deliverableRepo.save(deliverable);
+        console.log('Successfully created submission and synced JSON');
+        return savedSubmission;
     }
 
-    async getSubmissions(deliverableId: string): Promise<MonthlySubmission[]> {
+    async getSubmissions(deliverableId: string): Promise<DeliverableSubmission[]> {
         const deliverable = await this.deliverableRepo.findOne({ where: { id: deliverableId } });
 
         if (!deliverable) {
@@ -145,7 +187,7 @@ export class DeliverablesService {
         deliverableId: string,
         year: number,
         month: number
-    ): Promise<MonthlySubmission> {
+    ): Promise<DeliverableSubmission> {
         const deliverable = await this.deliverableRepo.findOne({ where: { id: deliverableId } });
 
         if (!deliverable) {
@@ -173,7 +215,7 @@ export class DeliverablesService {
     async updateSubmission(
         submissionId: string,
         dto: UpdateMonthlySubmissionDto
-    ): Promise<MonthlySubmission> {
+    ): Promise<DeliverableSubmission> {
         const submission = await this.monthlySubmissionRepo.findOne({
             where: { id: submissionId },
             relations: ['deliverable'],

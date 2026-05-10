@@ -10,30 +10,50 @@ export class CreateMonthlySubmissionDto {
     @IsNumber()
     year: number;
 
-    @ApiProperty({ minimum: 1, maximum: 12 })
+    @ApiProperty({ minimum: 1, maximum: 12, required: false })
+    @IsOptional()
     @IsNumber()
     @Min(1)
     @Max(12)
-    month: number;
+    month?: number;
+
+    @ApiProperty({ required: false, enum: ['Q1', 'Q2', 'Q3', 'Q4'] })
+    @IsOptional()
+    @IsString()
+    quarter?: string;
 
     @ApiProperty({ required: false })
     @IsOptional()
     @IsNumber()
     actualValue?: number;
 
-    @ApiProperty({ description: 'Milestones achieved during this month' })
-    @IsString()
-    progress: string;
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsNumber()
+    targetValue?: number;
 
-    @ApiProperty({ description: 'Challenges faced during this month' })
+    @ApiProperty({ required: false })
+    @IsOptional()
     @IsString()
-    keyIssues: string;
+    supportingDocType?: string;
 
-    @ApiProperty({ description: "MDA's efforts to resolve the issues" })
+    @ApiProperty({ description: 'Milestones achieved during this month/quarter', required: false })
+    @IsOptional()
     @IsString()
-    mdaEfforts: string;
+    progress?: string;
 
-    @ApiProperty({ description: 'Support required from stakeholders' })
+    @ApiProperty({ description: 'Challenges faced during this month/quarter', required: false })
+    @IsOptional()
     @IsString()
-    comments: string;
+    keyIssues?: string;
+
+    @ApiProperty({ description: "MDA's efforts to resolve the issues", required: false })
+    @IsOptional()
+    @IsString()
+    mdaEfforts?: string;
+
+    @ApiProperty({ description: 'Support required from stakeholders', required: false })
+    @IsOptional()
+    @IsString()
+    comments?: string;
 }

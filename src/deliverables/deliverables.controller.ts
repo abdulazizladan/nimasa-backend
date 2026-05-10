@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DeliverablesService } from './deliverables.service';
-import { DeliverableCategory } from './entities/deliverable.entity';
+import { StrategicDeliverable, DeliverableCategory } from './entities/strategic-deliverable.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
 import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
@@ -24,6 +24,18 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('agency-deliverables')
 export class DeliverablesController {
+    @Post('priority-areas')
+    @ApiOperation({ summary: 'Create a new priority area' })
+    createPriorityArea(@Body('name') name: string) {
+        return this.deliverablesService.createPriorityArea(name);
+    }
+
+    @Get('priority-areas')
+    @ApiOperation({ summary: 'Get all priority areas' })
+    findAllPriorityAreas() {
+        return this.deliverablesService.findAllPriorityAreas();
+    }
+
     constructor(private readonly deliverablesService: DeliverablesService) { }
 
     @Post()

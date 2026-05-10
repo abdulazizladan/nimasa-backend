@@ -2,14 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeliverablesService } from './deliverables.service';
 import { DeliverablesController } from './deliverables.controller';
-import { HighImpactDeliverablesController } from './high-impact-deliverables.controller';
+import { PresidentialPrioritiesController } from './high-impact-deliverables.controller';
 import { QuarterlyReportsController } from './quarterly-reports.controller';
-import { Deliverable } from './entities/deliverable.entity';
-import { MonthlySubmission } from './entities/monthly-submission.entity';
+import { StrategicDeliverable } from './entities/strategic-deliverable.entity';
+import { DeliverableSubmission } from './entities/deliverable-submission.entity';
+import { PresidentialPriorityArea } from './entities/presidential-priority.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Deliverable, MonthlySubmission])],
-    controllers: [DeliverablesController, HighImpactDeliverablesController, QuarterlyReportsController],
+    imports: [TypeOrmModule.forFeature([StrategicDeliverable, DeliverableSubmission, PresidentialPriorityArea])],
+    controllers: [DeliverablesController, PresidentialPrioritiesController, QuarterlyReportsController],
     providers: [DeliverablesService],
     exports: [DeliverablesService],
 })
