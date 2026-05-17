@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PerformanceModule } from './performance/performance.module';
 import { DeliverablesModule } from './deliverables/deliverables.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { DeliverablesModule } from './deliverables/deliverables.module';
     ProjectsModule,
     ReportModule,
     PerformanceModule,
-    DeliverablesModule
+    DeliverablesModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -22,7 +22,15 @@ export class DeliverablesService {
     ) { }
 
     async createPriorityArea(name: string): Promise<PresidentialPriorityArea> {
-        const area = this.priorityAreaRepo.create({ name });
+        if (!name || !name.trim()) {
+            throw new BadRequestException('Priority Area name is required.');
+        }
+        const trimmedName = name.trim();
+        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName } });
+        if (existing) {
+            throw new BadRequestException(`Priority Area "${trimmedName}" already exists.`);
+        }
+        const area = this.priorityAreaRepo.create({ name: trimmedName });
         return this.priorityAreaRepo.save(area);
     }
 
