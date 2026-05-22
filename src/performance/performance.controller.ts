@@ -8,8 +8,13 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 import { PerformanceService } from './performance.service';
 import { CreateDepartmentPerformanceDto } from './DTO/create-department-performance.dto';
 import { UpdateDepartmentPerformanceDto } from './DTO/update-department-performance.dto';
@@ -21,10 +26,13 @@ import { CreatePerformanceBondKpiDto, UpdatePerformanceBondKpiDto } from './DTO/
 
 @ApiTags('Ministerial Deliverables')
 @Controller('ministerial-deliverables')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class MinisterialDeliverablesController {
   constructor(private readonly performanceService: PerformanceService) {}
 
   @Post('department-monthly')
+  @Roles(Role.admin, Role.director, Role.manager)
   @ApiOperation({ summary: 'Create or update monthly performance for a department' })
   @ApiBody({ type: CreateDepartmentPerformanceDto })
   @ApiResponse({
@@ -39,6 +47,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Patch('department-monthly/:id')
+  @Roles(Role.admin, Role.director, Role.manager)
   @ApiOperation({ summary: 'Update a specific department monthly performance record' })
   @ApiParam({ name: 'id', description: 'UUID of the performance record' })
   @ApiBody({ type: UpdateDepartmentPerformanceDto })
@@ -51,6 +60,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Get('department/:departmentId/current')
+  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
   @ApiOperation({ summary: "Get the most recent performance record for a department" })
   @ApiParam({ name: 'departmentId', description: 'UUID of the department' })
   @ApiResponse({
@@ -65,6 +75,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Get('department/:departmentId/history')
+  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
   @ApiOperation({ summary: 'Get historical performance records for a department' })
   @ApiParam({ name: 'departmentId', description: 'UUID of the department' })
   @ApiQuery({ name: 'year', required: false, type: Number })
@@ -83,6 +94,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Get('department/:departmentId/summary')
+  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
   @ApiOperation({
     summary: 'Get a summary of performance targets for the current and previous month for a department',
   })
@@ -101,6 +113,7 @@ export class MinisterialDeliverablesController {
 
   // Ministerial Deliverable CRUD Endpoints
   @Get('deliverables')
+  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
   @ApiOperation({ summary: 'List all ministerial deliverables' })
   @ApiResponse({ status: 200, type: [PerformanceBondKPI] })
   findAll(): Promise<PerformanceBondKPI[]> {
@@ -108,6 +121,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Get('deliverables/:id')
+  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
   @ApiOperation({ summary: 'Get a specific ministerial deliverable' })
   @ApiParam({ name: 'id', description: 'Deliverable ID' })
   @ApiResponse({ status: 200, type: PerformanceBondKPI })
@@ -116,6 +130,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Post('deliverables')
+  @Roles(Role.admin, Role.director, Role.manager)
   @ApiOperation({ summary: 'Create a new ministerial deliverable' })
   @ApiBody({ type: CreatePerformanceBondKpiDto })
   @ApiResponse({ status: 201, type: PerformanceBondKPI })
@@ -124,6 +139,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Patch('deliverables/:id')
+  @Roles(Role.admin, Role.director, Role.manager)
   @ApiOperation({ summary: 'Update an existing ministerial deliverable' })
   @ApiParam({ name: 'id', description: 'Deliverable ID' })
   @ApiBody({ type: UpdatePerformanceBondKpiDto })
@@ -136,6 +152,7 @@ export class MinisterialDeliverablesController {
   }
 
   @Delete('deliverables/:id')
+  @Roles(Role.admin, Role.director, Role.manager)
   @ApiOperation({ summary: 'Delete a ministerial deliverable' })
   @ApiParam({ name: 'id', description: 'Deliverable ID' })
   @ApiResponse({ status: 204 })

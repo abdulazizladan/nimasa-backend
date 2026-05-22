@@ -3,15 +3,19 @@ import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { DeliverablesService } from './deliverables.service';
 import { CreateMonthlySubmissionDto } from './DTO/create-monthly-submission.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 
 @ApiTags('Quarterly Reports')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quarterly-reports')
 export class QuarterlyReportsController {
     constructor(private readonly deliverablesService: DeliverablesService) { }
 
     @Get()
+    @Roles(Role.admin, Role.director, Role.manager, Role.guest)
     @ApiOperation({ summary: 'Get quarterly reports for a deliverable' })
     @ApiQuery({ name: 'deliverableId', required: true })
     @ApiQuery({ name: 'quarter', required: false })
@@ -27,6 +31,7 @@ export class QuarterlyReportsController {
     }
 
     @Post()
+    @Roles(Role.admin, Role.director, Role.manager)
     @ApiOperation({ summary: 'Create a quarterly report (monthly submission)' })
     createSubmission(
         @Query('deliverableId') deliverableId: string,
