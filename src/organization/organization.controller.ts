@@ -25,15 +25,6 @@ export class OrganizationController {
     return this.organizationService.findAllPriorityAreas();
   }
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new organization' })
-  @ApiBody({ type: CreateOrganizationDto })
-  @ApiResponse({ status: 201, description: 'Organization successfully created.', type: Organization })
-  @ApiResponse({ status: 400, description: 'Invalid input.' })
-  create(@Body() createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
-    return this.organizationService.create(createOrganizationDto);
-  }
 
   @Get()
   @ApiOperation({ summary: 'Retrieve a list of all organizations' })

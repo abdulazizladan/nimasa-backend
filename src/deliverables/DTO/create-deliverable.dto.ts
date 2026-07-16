@@ -23,6 +23,10 @@ export class CreateDeliverableDto {
     deliverable: string;
 
     @ApiProperty()
+    @IsNumber()
+    baselineYear: number;
+
+    @ApiProperty()
     @IsString()
     baselineType: string;
 

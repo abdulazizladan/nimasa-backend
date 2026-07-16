@@ -20,15 +20,6 @@ export class OrganizationService {
     private readonly priorityAreaRepository: Repository<PriorityArea>
   ) {}
 
-  /**
-   * Creates a new organization.
-   * @param createOrganizationDto Data to create the organization.
-   * @returns The newly created organization entity.
-   */
-  async create(createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
-    const newOrganization = this.organizationRepository.create(createOrganizationDto);
-    return this.organizationRepository.save(newOrganization);
-  }
 
   // --- Helper to validate Organization FK ---
   private async findOrganization(code: string): Promise<Organization> {

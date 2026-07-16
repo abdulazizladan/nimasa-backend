@@ -5,6 +5,8 @@ export enum DeliverableCategory {
     PRESIDENTIAL_PRIORITY = 'PRESIDENTIAL_PRIORITY',
     HIGH_IMPACT = 'HIGH_IMPACT',
     AGENCY = 'AGENCY',
+    MINISTERIAL = 'MINISTERIAL',
+    BOTH = 'BOTH',
 }
 
 @Entity('strategic_deliverables')
@@ -35,7 +37,9 @@ export class StrategicDeliverable {
     @Column({ type: 'text' })
     deliverable: string;
 
-    // Baseline Information
+    @Column({ type: 'int', default: 2023 })
+    baselineYear: number;
+
     @Column({ type: 'text' })
     baselineType: string; // "Annual 2023" or "Q4 2023"
 

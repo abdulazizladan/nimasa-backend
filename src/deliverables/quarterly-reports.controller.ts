@@ -34,13 +34,12 @@ export class QuarterlyReportsController {
     @Roles(Role.admin, Role.director, Role.manager)
     @ApiOperation({ summary: 'Create a quarterly report (monthly submission)' })
     createSubmission(
-        @Query('deliverableId') deliverableId: string,
-        @Body() createSubmissionDto: CreateMonthlySubmissionDto
+        @Query('deliverableId') queryDeliverableId: string,
+        @Body() createSubmissionDto: CreateMonthlySubmissionDto & { deliverableId?: string }
     ) {
-        // Maps the creation of a 'quarterly report' to a submission as per existing models
+        const deliverableId = queryDeliverableId || createSubmissionDto.deliverableId;
         if (!deliverableId) {
-            // Alternatively if deliverableId is in the DTO, pass it
-            // Assuming deliverableId is provided in the query string
+            throw new Error('deliverableId is required');
         }
         return this.deliverablesService.createSubmission(deliverableId, createSubmissionDto);
     }
