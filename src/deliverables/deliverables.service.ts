@@ -173,6 +173,9 @@ export class DeliverablesService {
             };
         }
 
+        // Force TypeORM to recognize the change by reassigning the object reference
+        deliverable.yearlyPerformance = { ...deliverable.yearlyPerformance };
+
         await this.deliverableRepo.save(deliverable);
         console.log('Successfully created submission and synced JSON');
         return savedSubmission;
