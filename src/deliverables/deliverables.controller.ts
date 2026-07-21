@@ -41,6 +41,20 @@ export class DeliverablesController {
         return this.deliverablesService.findAllPriorityAreas();
     }
 
+    @Patch('priority-areas/:id')
+    @Roles(Role.admin, Role.director, Role.manager)
+    @ApiOperation({ summary: 'Update a priority area' })
+    updatePriorityArea(@Param('id') id: string, @Body('name') name: string) {
+        return this.deliverablesService.updatePriorityArea(id, name);
+    }
+
+    @Delete('priority-areas/:id')
+    @Roles(Role.admin, Role.director, Role.manager)
+    @ApiOperation({ summary: 'Delete a priority area' })
+    removePriorityArea(@Param('id') id: string) {
+        return this.deliverablesService.removePriorityArea(id);
+    }
+
     constructor(private readonly deliverablesService: DeliverablesService) { }
 
     @Post()

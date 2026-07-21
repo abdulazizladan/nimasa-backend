@@ -38,6 +38,33 @@ export class DeliverablesService {
         return this.priorityAreaRepo.find({ orderBy: { name: 'ASC' } });
     }
 
+    async updatePriorityArea(id: string, name: string): Promise<PresidentialPriorityArea> {
+        if (!name || !name.trim()) {
+            throw new BadRequestException('Priority Area name is required.');
+        }
+        const trimmedName = name.trim();
+        const area = await this.priorityAreaRepo.findOne({ where: { id } });
+        if (!area) {
+            throw new NotFoundException(`Priority Area with ID "${id}" not found.`);
+        }
+        
+        // Check if another area has the same name
+        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName } });
+        if (existing && existing.id !== id) {
+            throw new BadRequestException(`Priority Area "${trimmedName}" already exists.`);
+        }
+
+        area.name = trimmedName;
+        return this.priorityAreaRepo.save(area);
+    }
+
+    async removePriorityArea(id: string): Promise<void> {
+        const result = await this.priorityAreaRepo.delete(id);
+        if (result.affected === 0) {
+            throw new NotFoundException(`Priority Area with ID "${id}" not found.`);
+        }
+    }
+
     async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<StrategicDeliverable> {
         const deliverable = this.deliverableRepo.create({ ...dto, category });
         return this.deliverableRepo.save(deliverable);

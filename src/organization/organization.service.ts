@@ -47,7 +47,6 @@ export class OrganizationService {
     // 2. Create the department entity and attach the organization object
     const newDepartment = this.departmentRepository.create({
       ...departmentData,
-      code: organization.code, // Set the foreign key value
       organization: organization,
     });
     
@@ -172,7 +171,7 @@ export class OrganizationService {
     const updatePayload = {
         ...departmentData,
         // Pass the organization object if it was found (organization is not null)
-        ...(organization && { organization, organizationCode: organization.code })
+        ...(organization && { organization })
     };
 
     const updateResult: UpdateResult = await this.departmentRepository.update(
