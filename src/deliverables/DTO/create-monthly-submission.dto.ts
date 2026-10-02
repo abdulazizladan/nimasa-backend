@@ -1,13 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsUUID, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsUUID, IsInt, IsIn, Min, Max } from 'class-validator';
 
 export class CreateMonthlySubmissionDto {
-    @ApiProperty()
+    @ApiProperty({ required: false, description: 'Required unless supplied in the route or query string' })
+    @IsOptional()
     @IsUUID()
-    deliverableId: string;
+    deliverableId?: string;
 
     @ApiProperty()
-    @IsNumber()
+    @IsInt()
+    @Min(2000)
+    @Max(2100)
     year: number;
 
     @ApiProperty({ minimum: 1, maximum: 12, required: false })
@@ -19,7 +22,7 @@ export class CreateMonthlySubmissionDto {
 
     @ApiProperty({ required: false, enum: ['Q1', 'Q2', 'Q3', 'Q4'] })
     @IsOptional()
-    @IsString()
+    @IsIn(['Q1', 'Q2', 'Q3', 'Q4'])
     quarter?: string;
 
     @ApiProperty({ required: false })

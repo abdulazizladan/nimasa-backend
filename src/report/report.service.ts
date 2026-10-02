@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { StrategicDeliverable, DeliverableCategory } from '../deliverables/entities/strategic-deliverable.entity';
 import { PerformanceBondKPI } from '../performance/entities/performance-bond-kpi.entity';
 import { User } from '../user/entities/user.entity';
@@ -21,7 +21,7 @@ export class ReportService {
     // Fetch Summary Metrics
     const adminCount = await this.userRepo.count({ where: { role: Role.admin } });
     const guestCount = await this.userRepo.count({ where: { role: Role.guest } });
-    const presidentialCount = await this.deliverableRepo.count({ where: { category: DeliverableCategory.PRESIDENTIAL_PRIORITY } });
+    const presidentialCount = await this.deliverableRepo.count({ where: { category: In([DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.BOTH]) } });
     const ministerialCount = await this.kpiRepo.count();
     const agencyCount = await this.deliverableRepo.count({ where: { category: DeliverableCategory.AGENCY } });
 
@@ -38,7 +38,7 @@ export class ReportService {
 
     // Fetch Presidential Priorities
     const presidentialPriorities = await this.deliverableRepo.find({
-      where: { category: DeliverableCategory.PRESIDENTIAL_PRIORITY },
+      where: { category: In([DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.BOTH]) },
     });
 
     // Fetch Ministerial Deliverables

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { StrategicDeliverable, DeliverableCategory } from './entities/strategic-deliverable.entity';
 import { DeliverableSubmission } from './entities/deliverable-submission.entity';
 import { PresidentialPriorityArea } from './entities/presidential-priority.entity';
@@ -35,7 +35,7 @@ export class DeliverablesService {
     }
 
     async findAllPriorityAreas(): Promise<PresidentialPriorityArea[]> {
-        return this.priorityAreaRepo.find({ orderBy: { name: 'ASC' } });
+        return this.priorityAreaRepo.find({ order: { name: 'ASC' } });
     }
 
     async updatePriorityArea(id: string, name: string): Promise<PresidentialPriorityArea> {
@@ -70,10 +70,15 @@ export class DeliverablesService {
         return this.deliverableRepo.save(deliverable);
     }
 
-    async findAll(query: QueryDeliverablesDto, category?: DeliverableCategory): Promise<StrategicDeliverable[]> {
+    async findAll(
+        query: QueryDeliverablesDto,
+        category?: DeliverableCategory | DeliverableCategory[]
+    ): Promise<StrategicDeliverable[]> {
         const qb = this.deliverableRepo.createQueryBuilder('d');
 
-        if (category) {
+        if (Array.isArray(category)) {
+            qb.andWhere('d.category IN (:...categories)', { categories: category });
+        } else if (category) {
             qb.andWhere('d.category = :category', { category });
         }
 
@@ -107,6 +112,29 @@ export class DeliverablesService {
             throw new NotFoundException(`Deliverable with ID "${id}" not found`);
         }
         return deliverable;
+    }
+
+    /** Like findOne, but 404s if the deliverable is not in one of the given categories. */
+    async findOneInCategories(id: string, categories: DeliverableCategory[]): Promise<StrategicDeliverable> {
+        const deliverable = await this.findOne(id);
+        if (!categories.includes(deliverable.category)) {
+            throw new NotFoundException(`Deliverable with ID "${id}" not found`);
+        }
+        return deliverable;
+    }
+
+    /** Rejects a serial number already used by another deliverable in the same categories. */
+    async assertUniqueSerial(
+        serialNumber: number,
+        categories: DeliverableCategory[],
+        excludeId?: string
+    ): Promise<void> {
+        const existing = await this.deliverableRepo.findOne({
+            where: { serialNumber, category: In(categories) },
+        });
+        if (existing && existing.id !== excludeId) {
+            throw new BadRequestException(`Serial number ${serialNumber} is already in use.`);
+        }
     }
 
     async update(id: string, dto: UpdateDeliverableDto): Promise<StrategicDeliverable> {
@@ -265,16 +293,89 @@ export class DeliverablesService {
             );
         }
 
+        const oldKey = this.performanceKey(submission);
+        const oldYear = submission.year;
+        const newYear = dto.year ?? submission.year;
+        const newMonth = dto.month ?? submission.month;
+        const newQuarter = dto.quarter ?? submission.quarter;
+
+        // Moving a report to another period must not collide with an existing report
+        if (newYear !== submission.year || newMonth !== submission.month || newQuarter !== submission.quarter) {
+            const clash = await this.monthlySubmissionRepo.findOne({
+                where: {
+                    deliverable: { id: submission.deliverable.id },
+                    year: newYear,
+                    ...(newMonth ? { month: newMonth } : {}),
+                    ...(newQuarter ? { quarter: newQuarter } : {}),
+                },
+            });
+            if (clash && clash.id !== submission.id) {
+                throw new BadRequestException(
+                    `Submission for ${newMonth || newQuarter}/${newYear} already exists.`
+                );
+            }
+        }
+
         Object.assign(submission, dto);
-        return this.monthlySubmissionRepo.save(submission);
+        const saved = await this.monthlySubmissionRepo.save(submission);
+
+        await this.syncPerformance(submission.deliverable.id, (perf) => {
+            if (oldKey && perf[oldYear]) {
+                delete perf[oldYear][oldKey];
+                if (Object.keys(perf[oldYear]).length === 0) delete perf[oldYear];
+            }
+            const newKey = this.performanceKey(saved);
+            if (newKey) {
+                const year = saved.year.toString();
+                if (!perf[year]) perf[year] = {};
+                perf[year][newKey] = { target: saved.targetValue || 0, actual: saved.actualValue || 0 };
+            }
+        });
+
+        return saved;
     }
 
     async removeSubmission(submissionId: string): Promise<void> {
-        const result = await this.monthlySubmissionRepo.delete(submissionId);
-        if (result.affected === 0) {
+        const submission = await this.monthlySubmissionRepo.findOne({
+            where: { id: submissionId },
+            relations: ['deliverable'],
+        });
+        if (!submission) {
             throw new NotFoundException(
                 `Submission with ID "${submissionId}" not found`
             );
         }
+
+        await this.monthlySubmissionRepo.delete(submissionId);
+
+        const key = this.performanceKey(submission);
+        await this.syncPerformance(submission.deliverable.id, (perf) => {
+            const year = submission.year.toString();
+            if (key && perf[year]) {
+                delete perf[year][key];
+                if (Object.keys(perf[year]).length === 0) delete perf[year];
+            }
+        });
+    }
+
+    /** Key used for a submission inside the deliverable's yearlyPerformance JSON (q1..q4 or m1..m12). */
+    private performanceKey(s: { quarter?: string; month?: number }): string | null {
+        if (s.quarter) return s.quarter.toLowerCase();
+        if (s.month) return `m${s.month}`;
+        return null;
+    }
+
+    /** Applies an in-place change to a deliverable's yearlyPerformance JSON and saves it. */
+    private async syncPerformance(
+        deliverableId: string,
+        change: (perf: Record<string, any>) => void
+    ): Promise<void> {
+        const deliverable = await this.deliverableRepo.findOne({ where: { id: deliverableId } });
+        if (!deliverable) return;
+        const perf = { ...(deliverable.yearlyPerformance || {}) };
+        for (const year of Object.keys(perf)) perf[year] = { ...perf[year] };
+        change(perf);
+        deliverable.yearlyPerformance = perf;
+        await this.deliverableRepo.save(deliverable);
     }
 }

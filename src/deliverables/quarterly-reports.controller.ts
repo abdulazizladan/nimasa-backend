@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, UsePipes, ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { DeliverablesService } from './deliverables.service';
 import { CreateMonthlySubmissionDto } from './DTO/create-monthly-submission.dto';
+import { UpdateMonthlySubmissionDto } from './DTO/update-monthly-submission.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -10,6 +11,7 @@ import { Role } from '../auth/enums/role.enum';
 @ApiTags('Quarterly Reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 @Controller('quarterly-reports')
 export class QuarterlyReportsController {
     constructor(private readonly deliverablesService: DeliverablesService) { }
@@ -20,27 +22,46 @@ export class QuarterlyReportsController {
     @ApiQuery({ name: 'deliverableId', required: true })
     @ApiQuery({ name: 'quarter', required: false })
     @ApiQuery({ name: 'year', required: false })
-    getSubmissions(
+    async getSubmissions(
         @Query('deliverableId') deliverableId: string,
         @Query('quarter') quarter?: string,
         @Query('year') year?: string
     ) {
-        // Here we re-use getSubmissions and allow the frontend/backend to filter
-        // If we strictly needed quarters we'd aggregate, but existing models return submissions
-        return this.deliverablesService.getSubmissions(deliverableId);
+        if (!deliverableId) {
+            throw new BadRequestException('deliverableId is required');
+        }
+        const submissions = await this.deliverablesService.getSubmissions(deliverableId);
+        return submissions.filter(s =>
+            (!year || s.year === Number(year)) &&
+            (!quarter || s.quarter === quarter)
+        );
     }
 
     @Post()
     @Roles(Role.admin, Role.director, Role.manager)
-    @ApiOperation({ summary: 'Create a quarterly report (monthly submission)' })
+    @ApiOperation({ summary: 'Create a quarterly report' })
     createSubmission(
         @Query('deliverableId') queryDeliverableId: string,
-        @Body() createSubmissionDto: CreateMonthlySubmissionDto & { deliverableId?: string }
+        @Body() createSubmissionDto: CreateMonthlySubmissionDto
     ) {
         const deliverableId = queryDeliverableId || createSubmissionDto.deliverableId;
         if (!deliverableId) {
-            throw new Error('deliverableId is required');
+            throw new BadRequestException('deliverableId is required');
         }
         return this.deliverablesService.createSubmission(deliverableId, createSubmissionDto);
+    }
+
+    @Patch(':id')
+    @Roles(Role.admin, Role.director, Role.manager)
+    @ApiOperation({ summary: 'Update a quarterly report' })
+    updateSubmission(@Param('id') id: string, @Body() updateSubmissionDto: UpdateMonthlySubmissionDto) {
+        return this.deliverablesService.updateSubmission(id, updateSubmissionDto);
+    }
+
+    @Delete(':id')
+    @Roles(Role.admin, Role.director, Role.manager)
+    @ApiOperation({ summary: 'Delete a quarterly report' })
+    removeSubmission(@Param('id') id: string) {
+        return this.deliverablesService.removeSubmission(id);
     }
 }

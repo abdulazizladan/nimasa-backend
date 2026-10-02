@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, IsObject } from 'class-validator';
+import { DeliverableCategory } from '../entities/strategic-deliverable.entity';
 
 export class CreateDeliverableDto {
     @ApiProperty()
@@ -41,11 +42,18 @@ export class CreateDeliverableDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @IsObject()
     yearlyPerformance?: Record<string, any>;
 
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, description: 'Annual targets keyed by year, e.g. { "2026": 80 }' })
     @IsOptional()
+    @IsObject()
     projections?: Record<string, number>;
+
+    @ApiProperty({ required: false, enum: DeliverableCategory })
+    @IsOptional()
+    @IsEnum(DeliverableCategory)
+    category?: DeliverableCategory;
 
     @ApiProperty()
     @IsString()
