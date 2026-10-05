@@ -9,6 +9,13 @@ export enum DeliverableCategory {
     BOTH = 'BOTH',
 }
 
+export interface AnnualTarget {
+    baselineYear: number;
+    baselineValue?: number | null;
+    targetYear: number;
+    targetValue: number;
+}
+
 @Entity('strategic_deliverables')
 export class StrategicDeliverable {
     @PrimaryGeneratedColumn('uuid')
@@ -54,6 +61,10 @@ export class StrategicDeliverable {
 
     @Column({ type: 'simple-json', nullable: true })
     projections: Record<string, number>;
+
+    // Annual targets, each with its own baseline; projections is kept in sync as { targetYear: targetValue }
+    @Column({ type: 'simple-json', nullable: true })
+    annualTargets: AnnualTarget[];
 
     // Metadata
     @Column({ type: 'text' })

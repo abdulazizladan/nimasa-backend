@@ -71,6 +71,7 @@ export class ReportService {
         [`quarterly_actuals_${year}`]: performance,
         [`annual_${year}`]: performance.annual || { target: 0, actual: 0 },
         projections: d.projections || {},
+        annual_targets: d.annualTargets || [],
         source_of_evidence: d.supportingEvidence
       });
     });

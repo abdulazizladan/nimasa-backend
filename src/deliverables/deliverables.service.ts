@@ -66,7 +66,7 @@ export class DeliverablesService {
     }
 
     async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<StrategicDeliverable> {
-        const deliverable = this.deliverableRepo.create({ ...dto, category });
+        const deliverable = this.deliverableRepo.create({ ...this.withAnnualTargets(dto), category });
         return this.deliverableRepo.save(deliverable);
     }
 
@@ -139,8 +139,30 @@ export class DeliverablesService {
 
     async update(id: string, dto: UpdateDeliverableDto): Promise<StrategicDeliverable> {
         const deliverable = await this.findOne(id);
-        Object.assign(deliverable, dto);
+        Object.assign(deliverable, this.withAnnualTargets(dto));
         return this.deliverableRepo.save(deliverable);
+    }
+
+    /**
+     * Validates annual targets and derives projections ({ targetYear: targetValue }) from them,
+     * so code that reads projections keeps working.
+     */
+    private withAnnualTargets<T extends UpdateDeliverableDto>(dto: T): T {
+        if (!dto.annualTargets) return dto;
+        const years = new Set<number>();
+        for (const t of dto.annualTargets) {
+            if (t.targetYear <= t.baselineYear) {
+                throw new BadRequestException(`Target year ${t.targetYear} must be after its baseline year ${t.baselineYear}.`);
+            }
+            if (years.has(t.targetYear)) {
+                throw new BadRequestException(`Only one annual target is allowed for ${t.targetYear}.`);
+            }
+            years.add(t.targetYear);
+        }
+        const annualTargets = [...dto.annualTargets].sort((a, b) => a.targetYear - b.targetYear);
+        const projections: Record<string, number> = {};
+        for (const t of annualTargets) projections[t.targetYear.toString()] = t.targetValue;
+        return { ...dto, annualTargets, projections };
     }
 
     async remove(id: string): Promise<void> {
