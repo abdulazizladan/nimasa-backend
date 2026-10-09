@@ -9,6 +9,9 @@ export enum DeliverableCategory {
     BOTH = 'BOTH',
 }
 
+export const ANNUAL_AGGREGATIONS = ['sum', 'average', 'latest'] as const;
+export type AnnualAggregation = typeof ANNUAL_AGGREGATIONS[number];
+
 export interface AnnualTarget {
     baselineYear: number;
     baselineValue?: number | null;
@@ -65,6 +68,10 @@ export class StrategicDeliverable {
     // Annual targets, each with its own baseline; projections is kept in sync as { targetYear: targetValue }
     @Column({ type: 'simple-json', nullable: true })
     annualTargets: AnnualTarget[];
+
+    // How quarterly results combine into the annual figure (null = sum)
+    @Column({ type: 'varchar', nullable: true })
+    annualAggregation: AnnualAggregation | null;
 
     // Metadata
     @Column({ type: 'text' })

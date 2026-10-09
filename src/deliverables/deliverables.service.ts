@@ -140,6 +140,8 @@ export class DeliverablesService {
     async update(id: string, dto: UpdateDeliverableDto): Promise<StrategicDeliverable> {
         const deliverable = await this.findOne(id);
         Object.assign(deliverable, this.withAnnualTargets(dto));
+        // Annual targets or the aggregation method may have changed
+        this.applyAnnualTotals(deliverable);
         return this.deliverableRepo.save(deliverable);
     }
 
@@ -252,6 +254,7 @@ export class DeliverablesService {
 
         // Force TypeORM to recognize the change by reassigning the object reference
         deliverable.yearlyPerformance = { ...deliverable.yearlyPerformance };
+        this.applyAnnualTotals(deliverable);
 
         await this.deliverableRepo.save(deliverable);
         console.log('Successfully created submission and synced JSON');
@@ -398,6 +401,43 @@ export class DeliverablesService {
         for (const year of Object.keys(perf)) perf[year] = { ...perf[year] };
         change(perf);
         deliverable.yearlyPerformance = perf;
+        this.applyAnnualTotals(deliverable);
         await this.deliverableRepo.save(deliverable);
+    }
+
+    /**
+     * Recomputes yearlyPerformance[year].annual for presidential deliverables from their quarterly
+     * results (sum, average or latest quarter), using the annual target for that year when set,
+     * otherwise the quarterly targets combined the same way.
+     */
+    private applyAnnualTotals(deliverable: StrategicDeliverable): void {
+        const presidential = [DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.BOTH];
+        if (!presidential.includes(deliverable.category) || !deliverable.yearlyPerformance) return;
+
+        const method = deliverable.annualAggregation || 'sum';
+        const combine = (values: number[]) => {
+            if (method === 'latest') return values[values.length - 1];
+            const total = values.reduce((sum, v) => sum + v, 0);
+            return method === 'average' ? Math.round((total / values.length) * 100) / 100 : total;
+        };
+
+        const perf = { ...deliverable.yearlyPerformance };
+        for (const year of Object.keys(perf)) {
+            const yearPerf = { ...perf[year] };
+            const quarters = ['q1', 'q2', 'q3', 'q4'].filter(q => yearPerf[q]).map(q => yearPerf[q]);
+            delete yearPerf.annual;
+            if (quarters.length > 0) {
+                const annualTarget = deliverable.annualTargets?.find(t => t.targetYear === Number(year))?.targetValue
+                    ?? deliverable.projections?.[year];
+                yearPerf.annual = {
+                    target: annualTarget ?? combine(quarters.map(q => Number(q.target) || 0)),
+                    actual: combine(quarters.map(q => Number(q.actual) || 0)),
+                    method,
+                };
+            }
+            if (Object.keys(yearPerf).length === 0) delete perf[year];
+            else perf[year] = yearPerf;
+        }
+        deliverable.yearlyPerformance = perf;
     }
 }

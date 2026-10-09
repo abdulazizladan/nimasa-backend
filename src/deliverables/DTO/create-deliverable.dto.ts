@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsEnum, IsObject, IsInt, IsArray, Min, Max, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, IsObject, IsInt, IsArray, IsIn, Min, Max, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DeliverableCategory } from '../entities/strategic-deliverable.entity';
+import { DeliverableCategory, ANNUAL_AGGREGATIONS, AnnualAggregation } from '../entities/strategic-deliverable.entity';
 
 export class AnnualTargetDto {
     @ApiProperty()
@@ -80,6 +80,11 @@ export class CreateDeliverableDto {
     @ValidateNested({ each: true })
     @Type(() => AnnualTargetDto)
     annualTargets?: AnnualTargetDto[];
+
+    @ApiProperty({ required: false, enum: ANNUAL_AGGREGATIONS, description: 'How quarterly results combine into the annual figure (default sum)' })
+    @IsOptional()
+    @IsIn(ANNUAL_AGGREGATIONS)
+    annualAggregation?: AnnualAggregation;
 
     @ApiProperty({ required: false, enum: DeliverableCategory })
     @IsOptional()
