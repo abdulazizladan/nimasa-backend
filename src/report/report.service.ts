@@ -72,6 +72,7 @@ export class ReportService {
         [`annual_${year}`]: performance.annual || { target: 0, actual: 0 },
         projections: d.projections || {},
         annual_targets: d.annualTargets || [],
+        performance_direction: d.performanceDirection || 'higher',
         source_of_evidence: d.supportingEvidence
       });
     });

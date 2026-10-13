@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsEnum, IsObject, IsInt, IsArray, IsIn, Min, Max, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DeliverableCategory, ANNUAL_AGGREGATIONS, AnnualAggregation } from '../entities/strategic-deliverable.entity';
+import {
+    DeliverableCategory, ANNUAL_AGGREGATIONS, AnnualAggregation, PERFORMANCE_DIRECTIONS, PerformanceDirection
+} from '../entities/strategic-deliverable.entity';
 
 export class AnnualTargetDto {
     @ApiProperty()
@@ -85,6 +87,11 @@ export class CreateDeliverableDto {
     @IsOptional()
     @IsIn(ANNUAL_AGGREGATIONS)
     annualAggregation?: AnnualAggregation;
+
+    @ApiProperty({ required: false, enum: PERFORMANCE_DIRECTIONS, description: "'lower' when fewer is better, e.g. incident counts (default higher)" })
+    @IsOptional()
+    @IsIn(PERFORMANCE_DIRECTIONS)
+    performanceDirection?: PerformanceDirection;
 
     @ApiProperty({ required: false, enum: DeliverableCategory })
     @IsOptional()

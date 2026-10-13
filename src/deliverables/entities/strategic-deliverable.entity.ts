@@ -12,6 +12,9 @@ export enum DeliverableCategory {
 export const ANNUAL_AGGREGATIONS = ['sum', 'average', 'latest'] as const;
 export type AnnualAggregation = typeof ANNUAL_AGGREGATIONS[number];
 
+export const PERFORMANCE_DIRECTIONS = ['higher', 'lower'] as const;
+export type PerformanceDirection = typeof PERFORMANCE_DIRECTIONS[number];
+
 export interface AnnualTarget {
     baselineYear: number;
     baselineValue?: number | null;
@@ -72,6 +75,10 @@ export class StrategicDeliverable {
     // How quarterly results combine into the annual figure (null = sum)
     @Column({ type: 'varchar', nullable: true })
     annualAggregation: AnnualAggregation | null;
+
+    // Whether a higher or lower actual is better, e.g. 'lower' for incident counts (null = higher)
+    @Column({ type: 'varchar', nullable: true })
+    performanceDirection: PerformanceDirection | null;
 
     // Metadata
     @Column({ type: 'text' })
