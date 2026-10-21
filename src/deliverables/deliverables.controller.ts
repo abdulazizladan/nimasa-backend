@@ -6,11 +6,12 @@ import {
     Patch,
     Param,
     Delete,
+    Query,
     UseGuards,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { DeliverablesService } from './deliverables.service';
 import { DeliverableCategory } from './entities/strategic-deliverable.entity';
 import { CreateMonthlySubmissionDto } from './DTO/create-monthly-submission.dto';
@@ -41,18 +42,21 @@ export class AgencyDeliverablesController extends CategoryDeliverablesController
 
     // Priority areas (shared by the presidential, ministerial and agency pages).
     // Declared here so they are routed before the inherited GET/PATCH/DELETE ':id'.
+    // Priority areas come in two lists: 'national' (presidential and ministerial, the default) and 'agency'
     @Post('priority-areas')
     @Roles(Role.admin)
     @ApiOperation({ summary: 'Create a new priority area' })
-    createPriorityArea(@Body('name') name: string) {
-        return this.deliverablesService.createPriorityArea(name);
+    @ApiBody({ schema: { properties: { name: { type: 'string' }, scope: { type: 'string', enum: ['national', 'agency'] } } } })
+    createPriorityArea(@Body('name') name: string, @Body('scope') scope?: string) {
+        return this.deliverablesService.createPriorityArea(name, scope);
     }
 
     @Get('priority-areas')
     @Roles(Role.admin, Role.guest)
-    @ApiOperation({ summary: 'Get all priority areas' })
-    findAllPriorityAreas() {
-        return this.deliverablesService.findAllPriorityAreas();
+    @ApiOperation({ summary: 'Get the priority areas in one list' })
+    @ApiQuery({ name: 'scope', required: false, enum: ['national', 'agency'] })
+    findAllPriorityAreas(@Query('scope') scope?: string) {
+        return this.deliverablesService.findAllPriorityAreas(scope);
     }
 
     @Patch('priority-areas/:id')

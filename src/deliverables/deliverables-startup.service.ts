@@ -13,7 +13,8 @@ import { DeliverablesService } from './deliverables.service';
  *
  *    Only rows not yet migrated are copied. Each copy keeps its original id, figures and dates;
  *    the source row is kept and stamped with migratedAt, never deleted.
- * 2. Renumbers deliverables whose serial numbers clash on a list (serial numbers are now
+ * 2. Starts the agency priority-area list from the areas agency deliverables use (once).
+ * 3. Renumbers deliverables whose serial numbers clash on a list (serial numbers are now
  *    assigned automatically; this repairs numbers entered by hand before that).
  *
  * Both steps do nothing once the data is in order.
@@ -36,6 +37,14 @@ export class DeliverablesStartupService implements OnApplicationBootstrap {
             }
         } catch (err) {
             this.logger.error('Ministerial deliverables migration failed', err as Error);
+        }
+        try {
+            const seeded = await this.deliverablesService.seedAgencyPriorityAreas();
+            if (seeded > 0) {
+                this.logger.log(`Started the agency priority-area list with ${seeded} area(s) used by agency deliverables.`);
+            }
+        } catch (err) {
+            this.logger.error('Seeding agency priority areas failed', err as Error);
         }
         try {
             const renumbered = await this.deliverablesService.renumberDuplicateSerials();

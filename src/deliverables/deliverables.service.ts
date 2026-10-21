@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 import { StrategicDeliverable, DeliverableCategory } from './entities/strategic-deliverable.entity';
 import { DeliverableSubmission } from './entities/deliverable-submission.entity';
-import { PresidentialPriorityArea } from './entities/presidential-priority.entity';
+import { PresidentialPriorityArea, PRIORITY_AREA_SCOPES, PriorityAreaScope } from './entities/presidential-priority.entity';
 import { CreateDeliverableDto } from './DTO/create-deliverable.dto';
 import { UpdateDeliverableDto } from './DTO/update-deliverable.dto';
 import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
@@ -43,21 +43,48 @@ export class DeliverablesService {
         private readonly priorityAreaRepo: Repository<PresidentialPriorityArea>,
     ) { }
 
-    async createPriorityArea(name: string): Promise<PresidentialPriorityArea> {
+    /** National (presidential and ministerial) unless 'agency' is given; rejects anything else. */
+    private toScope(scope?: string): PriorityAreaScope {
+        if (!scope) return 'national';
+        if (!PRIORITY_AREA_SCOPES.includes(scope as PriorityAreaScope)) {
+            throw new BadRequestException(`Scope must be one of: ${PRIORITY_AREA_SCOPES.join(', ')}.`);
+        }
+        return scope as PriorityAreaScope;
+    }
+
+    async createPriorityArea(name: string, scope?: string): Promise<PresidentialPriorityArea> {
         if (!name || !name.trim()) {
             throw new BadRequestException('Priority Area name is required.');
         }
         const trimmedName = name.trim();
-        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName } });
+        const areaScope = this.toScope(scope);
+        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName, scope: areaScope } });
         if (existing) {
             throw new BadRequestException(`Priority Area "${trimmedName}" already exists.`);
         }
-        const area = this.priorityAreaRepo.create({ name: trimmedName });
+        const area = this.priorityAreaRepo.create({ name: trimmedName, scope: areaScope });
         return this.priorityAreaRepo.save(area);
     }
 
-    async findAllPriorityAreas(): Promise<PresidentialPriorityArea[]> {
-        return this.priorityAreaRepo.find({ order: { name: 'ASC' } });
+    async findAllPriorityAreas(scope?: string): Promise<PresidentialPriorityArea[]> {
+        return this.priorityAreaRepo.find({ where: { scope: this.toScope(scope) }, order: { name: 'ASC' } });
+    }
+
+    /**
+     * Starts the agency priority-area list from the areas agency deliverables already use.
+     * Only runs while the agency list is empty, so areas deleted later are not brought back.
+     */
+    async seedAgencyPriorityAreas(): Promise<number> {
+        if (await this.priorityAreaRepo.count({ where: { scope: 'agency' } })) return 0;
+        const rows = await this.deliverableRepo.createQueryBuilder('d')
+            .select('DISTINCT d.priorityArea', 'name')
+            .where('d.category = :category', { category: DeliverableCategory.AGENCY })
+            .getRawMany<{ name: string }>();
+        const names = [...new Set(rows.map(r => (r.name || '').trim()).filter(Boolean))];
+        for (const name of names) {
+            await this.priorityAreaRepo.save(this.priorityAreaRepo.create({ name, scope: 'agency' }));
+        }
+        return names.length;
     }
 
     async updatePriorityArea(id: string, name: string): Promise<PresidentialPriorityArea> {
@@ -70,8 +97,8 @@ export class DeliverablesService {
             throw new NotFoundException(`Priority Area with ID "${id}" not found.`);
         }
         
-        // Check if another area has the same name
-        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName } });
+        // Check if another area in the same list has the same name
+        const existing = await this.priorityAreaRepo.findOne({ where: { name: trimmedName, scope: area.scope } });
         if (existing && existing.id !== id) {
             throw new BadRequestException(`Priority Area "${trimmedName}" already exists.`);
         }
