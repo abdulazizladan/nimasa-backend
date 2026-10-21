@@ -17,7 +17,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
-  @Roles(Role.admin, Role.director, Role.manager, Role.guest)
+  @Roles(Role.admin, Role.guest)
   @ApiOperation({ summary: 'Get dashboard statistics' })
   @ApiOkResponse({
     description: 'Returns counts for users, presidential priorities, ministerial deliverables, and agency KPIs.',

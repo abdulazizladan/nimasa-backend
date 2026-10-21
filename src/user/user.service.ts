@@ -1,16 +1,17 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository, UpdateResult, In } from 'typeorm';
 import { Info } from './entities/info.entity';
 import { Contact } from './entities/contact.entity';
 import { Status } from './enums/status.enum';
-import { Role } from 'src/auth/enums/role.enum';
+import { Role, RETIRED_ROLES } from 'src/auth/enums/role.enum';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(UserService.name);
 
   constructor(
     @InjectRepository(User)
@@ -21,12 +22,32 @@ export class UserService {
     private readonly contactRepository: Repository<Contact>
   ) { }
 
+  /** Converts users still holding a retired role (director, manager) to guest. */
+  async onApplicationBootstrap(): Promise<void> {
+    try {
+      const result = await this.userRepository.update({ role: In(RETIRED_ROLES) as any }, { role: Role.guest });
+      if (result.affected) {
+        this.logger.log(`Converted ${result.affected} director/manager user(s) to guest.`);
+      }
+    } catch (err) {
+      this.logger.error('Converting retired user roles failed', err as Error);
+    }
+  }
+
+  /** Only admin and guest exist; reject anything else (e.g. the retired director/manager roles). */
+  private assertValidRole(role: unknown): void {
+    if (role !== undefined && !Object.values(Role).includes(role as Role)) {
+      throw new BadRequestException(`Role must be one of: ${Object.values(Role).join(', ')}.`);
+    }
+  }
+
   /**
    * Creates a new user in the database, including related contact and info.
    * @param createUserDto - DTO containing user, contact, and info details
    * @returns An object indicating success or failure, the user data, and a message
    */
   async create(createUserDto: CreateUserDto) {
+    this.assertValidRole(createUserDto.role);
     const hashedPassword = await User.hashPassword(createUserDto.password);
     const user = this.userRepository.create({
       ...createUserDto,
@@ -127,6 +148,7 @@ export class UserService {
    * @returns An object indicating success or failure and a message
    */
   async update(email: string, updateUserDto: UpdateUserDto): Promise<User> {
+    this.assertValidRole(updateUserDto.role);
     // 1. Attempt the update directly based on the email (where clause).
     const updateResult: UpdateResult = await this.userRepository.update(
       { email: email },

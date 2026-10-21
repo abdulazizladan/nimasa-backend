@@ -29,9 +29,10 @@ export class AnnualTargetDto {
 }
 
 export class CreateDeliverableDto {
-    @ApiProperty()
+    @ApiProperty({ required: false, description: 'Ignored: serial numbers are assigned automatically' })
+    @IsOptional()
     @IsNumber()
-    serialNumber: number;
+    serialNumber?: number;
 
     @ApiProperty()
     @IsString()
@@ -105,4 +106,9 @@ export class CreateDeliverableDto {
     @ApiProperty()
     @IsString()
     supportingEvidence: string;
+
+    @ApiProperty({ required: false, description: 'Evidence file name or template link' })
+    @IsOptional()
+    @IsString()
+    evidenceFile?: string;
 }

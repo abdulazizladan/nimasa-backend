@@ -4,12 +4,21 @@ import { OrganizationService } from './organization.service';
 import { CreateDepartmentDto } from './DTO/create-department.dto';
 import { UpdateDepartmentDto } from './DTO/update-department.dto';
 import { Department } from './entities/department.entity';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 
 @ApiTags('Departments')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly organizationService: OrganizationService) {}
 
+  @Roles(Role.admin, Role.guest)
   @Get()
   @ApiOperation({ summary: 'Retrieve a list of all departments' })
   @ApiResponse({ status: 200, description: 'List of departments.', type: [Department] })
@@ -17,6 +26,7 @@ export class DepartmentsController {
     return this.organizationService.findAllDepartments();
   }
 
+  @Roles(Role.admin)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new department under an existing organization' })
@@ -27,6 +37,7 @@ export class DepartmentsController {
     return this.organizationService.createDepartment(createDepartmentDto);
   }
 
+  @Roles(Role.admin, Role.guest)
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single department by its ID' })
   @ApiParam({ name: 'id', description: 'UUID of the department' })
@@ -38,6 +49,7 @@ export class DepartmentsController {
     return this.organizationService.findOneDepartment(id);
   }
 
+  @Roles(Role.admin)
   @Patch(':id')
   @ApiOperation({ summary: 'Update an existing department' })
   @ApiParam({ name: 'id', description: 'UUID of the department to update' })

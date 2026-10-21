@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { StrategicDeliverable, DeliverableCategory } from './entities/strategic-deliverable.entity';
 import { DeliverableSubmission } from './entities/deliverable-submission.entity';
 import { PresidentialPriorityArea } from './entities/presidential-priority.entity';
@@ -10,8 +10,30 @@ import { QueryDeliverablesDto } from './DTO/query-deliverables.dto';
 import { CreateMonthlySubmissionDto } from './DTO/create-monthly-submission.dto';
 import { UpdateMonthlySubmissionDto } from './DTO/update-monthly-submission.dto';
 
+/**
+ * Deliverable lists and the categories each shows. BOTH appears on the presidential and the
+ * ministerial lists, so its serial number must be unique in both.
+ */
+const LIST_GROUPS: DeliverableCategory[][] = [
+    [DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.BOTH],
+    [DeliverableCategory.MINISTERIAL, DeliverableCategory.BOTH],
+    [DeliverableCategory.AGENCY],
+    [DeliverableCategory.HIGH_IMPACT],
+];
+
+/** Every category that shares a list with the given one. */
+function categoriesSharingLists(category: DeliverableCategory): DeliverableCategory[] {
+    const shared = new Set<DeliverableCategory>([category]);
+    for (const group of LIST_GROUPS) {
+        if (group.includes(category)) group.forEach(c => shared.add(c));
+    }
+    return [...shared];
+}
+
 @Injectable()
 export class DeliverablesService {
+    private readonly logger = new Logger(DeliverablesService.name);
+
     constructor(
         @InjectRepository(StrategicDeliverable)
         private readonly deliverableRepo: Repository<StrategicDeliverable>,
@@ -65,9 +87,58 @@ export class DeliverablesService {
         }
     }
 
+    /** Creates a deliverable with the next serial number on its list (any serialNumber sent is ignored). */
     async create(dto: CreateDeliverableDto, category: DeliverableCategory = DeliverableCategory.AGENCY): Promise<StrategicDeliverable> {
-        const deliverable = this.deliverableRepo.create({ ...this.withAnnualTargets(dto), category });
-        return this.deliverableRepo.save(deliverable);
+        const { serialNumber: _ignored, ...fields } = this.withAnnualTargets(dto);
+        return this.deliverableRepo.manager.transaction(async (manager) => {
+            const repo = manager.getRepository(StrategicDeliverable);
+            const deliverable = repo.create({
+                ...fields,
+                category,
+                serialNumber: await this.nextSerialNumber(category, manager),
+            });
+            return repo.save(deliverable);
+        });
+    }
+
+    /** Next free serial number across every list a deliverable of this category appears on. */
+    async nextSerialNumber(category: DeliverableCategory, manager: EntityManager = this.deliverableRepo.manager): Promise<number> {
+        const row = await manager.getRepository(StrategicDeliverable)
+            .createQueryBuilder('d')
+            .select('MAX(d.serialNumber)', 'max')
+            .where('d.category IN (:...categories)', { categories: categoriesSharingLists(category) })
+            .getRawOne<{ max: number | null }>();
+        return (Number(row?.max) || 0) + 1;
+    }
+
+    /**
+     * Gives every deliverable a serial number that is unique on its list(s). Where numbers clash,
+     * the earliest-created deliverable keeps its number and later ones get the next free number.
+     * Safe to run repeatedly; returns how many deliverables were renumbered.
+     */
+    async renumberDuplicateSerials(): Promise<number> {
+        return this.deliverableRepo.manager.transaction(async (manager) => {
+            const repo = manager.getRepository(StrategicDeliverable);
+            let renumbered = 0;
+            for (const group of LIST_GROUPS) {
+                const items = await repo.find({
+                    where: group.map(category => ({ category })),
+                    order: { createdAt: 'ASC', id: 'ASC' },
+                });
+                const seen = new Set<number>();
+                for (const item of items) {
+                    if (seen.has(item.serialNumber)) {
+                        const previous = item.serialNumber;
+                        item.serialNumber = await this.nextSerialNumber(item.category, manager);
+                        await repo.update(item.id, { serialNumber: item.serialNumber });
+                        this.logger.log(`Renumbered ${item.category} deliverable ${item.id}: #${previous} -> #${item.serialNumber}`);
+                        renumbered++;
+                    }
+                    seen.add(item.serialNumber);
+                }
+            }
+            return renumbered;
+        });
     }
 
     async findAll(
@@ -123,25 +194,25 @@ export class DeliverablesService {
         return deliverable;
     }
 
-    /** Rejects a serial number already used by another deliverable in the same categories. */
-    async assertUniqueSerial(
-        serialNumber: number,
-        categories: DeliverableCategory[],
-        excludeId?: string
-    ): Promise<void> {
-        const existing = await this.deliverableRepo.findOne({
-            where: { serialNumber, category: In(categories) },
-        });
-        if (existing && existing.id !== excludeId) {
-            throw new BadRequestException(`Serial number ${serialNumber} is already in use.`);
-        }
-    }
-
+    /** Updates a deliverable. Serial numbers are assigned by the system, so any serialNumber sent is ignored. */
     async update(id: string, dto: UpdateDeliverableDto): Promise<StrategicDeliverable> {
+        const { serialNumber: _ignored, ...fields } = this.withAnnualTargets(dto);
         const deliverable = await this.findOne(id);
-        Object.assign(deliverable, this.withAnnualTargets(dto));
+        const previousCategory = deliverable.category;
+        Object.assign(deliverable, fields);
         // Annual targets or the aggregation method may have changed
         this.applyAnnualTotals(deliverable);
+        // Moving to another list (e.g. Presidential -> Both) can collide with a number used there;
+        // the moved deliverable then takes the next free number
+        if (deliverable.category !== previousCategory) {
+            const clashes = await this.deliverableRepo.find({
+                where: categoriesSharingLists(deliverable.category)
+                    .map(category => ({ category, serialNumber: deliverable.serialNumber })),
+            });
+            if (clashes.some(other => other.id !== deliverable.id)) {
+                deliverable.serialNumber = await this.nextSerialNumber(deliverable.category);
+            }
+        }
         return this.deliverableRepo.save(deliverable);
     }
 
@@ -239,7 +310,9 @@ export class DeliverablesService {
         
         if (dto.quarter) {
             const qKey = dto.quarter.toLowerCase();
+            // Keep any extra figures already recorded for the quarter (e.g. ministerial "cumulative")
             deliverable.yearlyPerformance[year][qKey] = {
+                ...deliverable.yearlyPerformance[year][qKey],
                 target: dto.targetValue || 0,
                 actual: dto.actualValue || 0
             };
@@ -345,15 +418,18 @@ export class DeliverablesService {
         const saved = await this.monthlySubmissionRepo.save(submission);
 
         await this.syncPerformance(submission.deliverable.id, (perf) => {
+            const newKey = this.performanceKey(saved);
+            const samePeriod = newKey === oldKey && saved.year === oldYear;
+            // Extra figures recorded for the quarter (e.g. ministerial "cumulative") stay with it
+            const previous = samePeriod && oldKey ? perf[oldYear]?.[oldKey] : undefined;
             if (oldKey && perf[oldYear]) {
                 delete perf[oldYear][oldKey];
                 if (Object.keys(perf[oldYear]).length === 0) delete perf[oldYear];
             }
-            const newKey = this.performanceKey(saved);
             if (newKey) {
                 const year = saved.year.toString();
                 if (!perf[year]) perf[year] = {};
-                perf[year][newKey] = { target: saved.targetValue || 0, actual: saved.actualValue || 0 };
+                perf[year][newKey] = { ...previous, target: saved.targetValue || 0, actual: saved.actualValue || 0 };
             }
         });
 
@@ -406,13 +482,15 @@ export class DeliverablesService {
     }
 
     /**
-     * Recomputes yearlyPerformance[year].annual for presidential deliverables from their quarterly
+     * Recomputes yearlyPerformance[year].annual for presidential, ministerial and agency deliverables from their quarterly
      * results (sum, average or latest quarter), using the annual target for that year when set,
      * otherwise the quarterly targets combined the same way.
      */
     private applyAnnualTotals(deliverable: StrategicDeliverable): void {
-        const presidential = [DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.BOTH];
-        if (!presidential.includes(deliverable.category) || !deliverable.yearlyPerformance) return;
+        const tracked = [
+            DeliverableCategory.PRESIDENTIAL_PRIORITY, DeliverableCategory.MINISTERIAL, DeliverableCategory.BOTH, DeliverableCategory.AGENCY
+        ];
+        if (!tracked.includes(deliverable.category) || !deliverable.yearlyPerformance) return;
 
         const method = deliverable.annualAggregation || 'sum';
         const combine = (values: number[]) => {

@@ -17,7 +17,7 @@ export class QuarterlyReportsController {
     constructor(private readonly deliverablesService: DeliverablesService) { }
 
     @Get()
-    @Roles(Role.admin, Role.director, Role.manager, Role.guest)
+    @Roles(Role.admin, Role.guest)
     @ApiOperation({ summary: 'Get quarterly reports for a deliverable' })
     @ApiQuery({ name: 'deliverableId', required: true })
     @ApiQuery({ name: 'quarter', required: false })
@@ -38,7 +38,7 @@ export class QuarterlyReportsController {
     }
 
     @Post()
-    @Roles(Role.admin, Role.director, Role.manager)
+    @Roles(Role.admin)
     @ApiOperation({ summary: 'Create a quarterly report' })
     createSubmission(
         @Query('deliverableId') queryDeliverableId: string,
@@ -52,14 +52,14 @@ export class QuarterlyReportsController {
     }
 
     @Patch(':id')
-    @Roles(Role.admin, Role.director, Role.manager)
+    @Roles(Role.admin)
     @ApiOperation({ summary: 'Update a quarterly report' })
     updateSubmission(@Param('id') id: string, @Body() updateSubmissionDto: UpdateMonthlySubmissionDto) {
         return this.deliverablesService.updateSubmission(id, updateSubmissionDto);
     }
 
     @Delete(':id')
-    @Roles(Role.admin, Role.director, Role.manager)
+    @Roles(Role.admin)
     @ApiOperation({ summary: 'Delete a quarterly report' })
     removeSubmission(@Param('id') id: string) {
         return this.deliverablesService.removeSubmission(id);

@@ -10,16 +10,7 @@ export class CreateUserDto {
     @ApiProperty({})
     password: string;
 
-    @ApiProperty(
-        {
-            enum: [
-                "admin", 
-                "director", 
-                "manager"
-            ], 
-            default: "manager"
-        }
-    )
+    @ApiProperty({ enum: Role, default: Role.guest })
     role: Role;
 
     @ApiProperty({})

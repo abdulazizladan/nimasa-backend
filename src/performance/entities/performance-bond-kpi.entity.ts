@@ -29,6 +29,11 @@ export class PerformanceBondKPI {
   @Column({ type: 'simple-json', nullable: true })
   projections: Record<string, number>;
 
+  // Set once this record has been copied into strategic_deliverables (category MINISTERIAL).
+  // The table is kept as an archive; ministerial deliverables are now managed there.
+  @Column({ type: 'datetime', nullable: true })
+  migratedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

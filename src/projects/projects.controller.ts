@@ -14,15 +14,24 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './DTOs/create-project.dto';
 import { UpdateProjectDto } from './DTOs/update-project.dto';
 import { ProjectDto } from './DTOs/project.dto';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 
 
 @ApiTags('Projects')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('projects')
 export class ProjectsController {
 
     constructor(private readonly projectService: ProjectsService) {}
 
     // 1. CREATE: POST /projects
+    @Roles(Role.admin)
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Create a new Project' })
@@ -41,6 +50,7 @@ export class ProjectsController {
     }
 
     // 2. READ All: GET /projects
+    @Roles(Role.admin, Role.guest)
     @Get()
     @ApiOperation({ summary: 'Retrieve all Projects' })
     @ApiResponse({ 
@@ -53,6 +63,7 @@ export class ProjectsController {
     }
 
     // 2. READ One: GET /projects/:id
+    @Roles(Role.admin, Role.guest)
     @Get(':id')
     @ApiOperation({ summary: 'Retrieve a specific Project by ID' })
     @ApiParam({ 
@@ -71,6 +82,7 @@ export class ProjectsController {
     }
 
     // 3. UPDATE: PATCH /projects/:id
+    @Roles(Role.admin)
     @Patch(':id')
     @ApiOperation({ summary: 'Update a specific Project' })
     @ApiParam({ 
@@ -96,6 +108,7 @@ export class ProjectsController {
     }
 
     // 4. DELETE: DELETE /projects/:id
+    @Roles(Role.admin)
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT) // Use 204 No Content for successful deletion
     @ApiOperation({ summary: 'Delete a specific Project' })

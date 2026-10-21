@@ -87,6 +87,10 @@ export class StrategicDeliverable {
     @Column({ type: 'text' })
     supportingEvidence: string;
 
+    // Evidence file / template link (carried over from the original ministerial deliverables)
+    @Column({ type: 'text', nullable: true })
+    evidenceFile: string | null;
+
     // Relationship with monthly submissions
     @OneToMany(() => DeliverableSubmission, submission => submission.deliverable)
     monthlySubmissions: Relation<DeliverableSubmission>[];

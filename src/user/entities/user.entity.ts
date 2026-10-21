@@ -32,9 +32,10 @@ export class User {
     password: string;
 
     /**
-     * Role of the user (admin, director, manager)
+     * Role of the user (admin or guest). Checked by the API rather than a database constraint,
+     * so retired roles stored by older versions can be converted on startup without failing.
      */
-    @Column({ type: 'varchar', enum: Role, default: Role.guest })
+    @Column({ type: 'varchar', default: Role.guest })
     @IsEnum(Role)
     role: Role;
 

@@ -1,10 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from './enums/role.enum';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { ApiOperation, ApiTags, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiUnauthorizedResponse, ApiBadRequestResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { RolesGuard } from './roles.guard';
+import { Roles } from './roles.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -56,19 +59,11 @@ export class AuthController {
                     password: 'password'
                 }
             },
-            director: {
-                summary: 'Director Login',
-                description: 'Login as director user',
+            guest: {
+                summary: 'Guest Login',
+                description: 'Login as guest user',
                 value: {
-                    email: 'useelikoro@gmail.com',
-                    password: 'password'
-                }
-            },
-            manager: {
-                summary: 'Manager Login',
-                description: 'Login as manager user',
-                value: {
-                    email: 'manager@gmail.com',
+                    email: 'guest@example.com',
                     password: 'password'
                 }
             }
@@ -81,7 +76,7 @@ export class AuthController {
 
     @ApiOperation({
         summary: "User registration",
-        description: "Registers a new admin, director, or manager user in the system"
+        description: "Registers a new admin or guest user in the system. Admin only"
     })
     @ApiCreatedResponse({
         description: 'User successfully created'
@@ -111,6 +106,10 @@ export class AuthController {
             }
         }
     })
+    // Creating accounts is an admin task; login stays open
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.admin)
+    @ApiBearerAuth()
     @Post("register")
     register(@Body() user: CreateUserDto) {
         return this.authService.register(user);

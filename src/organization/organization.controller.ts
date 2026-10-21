@@ -8,8 +8,16 @@ import { UpdateDepartmentDto } from './DTO/update-department.dto';
 import { Organization } from './entities/organization.entity';
 import { Department } from './entities/department.entity';
 import { PriorityArea } from './entities/priority-area.entity';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 
 @ApiTags('Agencies & Organization')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('agencies')
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) { }
@@ -18,6 +26,7 @@ export class OrganizationController {
   // ORGANIZATION ENDPOINTS (/agencies)
   // ====================================================================
 
+  @Roles(Role.admin, Role.guest)
   @Get('priority-area')
   @ApiOperation({ summary: 'Retrieve a list of all priority areas' })
   @ApiResponse({ status: 200, description: 'List of priority areas.', type: [PriorityArea] })
@@ -26,6 +35,7 @@ export class OrganizationController {
   }
 
 
+  @Roles(Role.admin, Role.guest)
   @Get()
   @ApiOperation({ summary: 'Retrieve a list of all organizations' })
   @ApiQuery({
@@ -43,6 +53,7 @@ export class OrganizationController {
     return this.organizationService.findAll(shouldInclude);
   }
 
+  @Roles(Role.admin, Role.guest)
   @Get(':code')
   @ApiOperation({ summary: 'Retrieve a single organization by its unique code' })
   @ApiParam({ name: 'code', description: 'Unique code of the organization' })
@@ -52,6 +63,7 @@ export class OrganizationController {
     return this.organizationService.findOne(code);
   }
 
+  @Roles(Role.admin)
   @Patch(':code')
   @ApiOperation({ summary: 'Update an existing organization' })
   @ApiParam({ name: 'code', description: 'Unique code of the organization to update' })
@@ -65,6 +77,7 @@ export class OrganizationController {
     return this.organizationService.update(code, updateOrganizationDto);
   }
 
+  @Roles(Role.admin)
   @Delete(':code')
   @HttpCode(HttpStatus.NO_CONTENT) // 204 status on successful deletion
   @ApiOperation({ summary: 'Delete an organization by its unique code' })

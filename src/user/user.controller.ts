@@ -33,7 +33,7 @@ export class UserController {
         value: {
           email: 'jane.doe@example.com',
           password: 'P@ssw0rd!',
-          role: 'manager',
+          role: 'guest',
           info: {
             firstName: 'Jane',
             lastName: 'Doe',
@@ -53,13 +53,13 @@ export class UserController {
 
   /**
    * Get user stats by role and status.
-   * Accessible by admin and director.
-   * @access admin, director
+   * Accessible by admin.
+   * @access admin
    */
   @Roles(Role.admin)
   @ApiOkResponse({ description: "User stats found" })
   @ApiUnauthorizedResponse({ description: 'Unauthorized. JWT is missing or invalid.' })
-  @ApiForbiddenResponse({ description: 'Forbidden. Only admin and director roles allowed.' })
+  @ApiForbiddenResponse({ description: 'Forbidden. Only admin role allowed.' })
   @ApiOperation({ summary: "Get user stats by role and status" })
   @Get('stats')
   getStats() {
@@ -68,14 +68,14 @@ export class UserController {
 
   /**
    * Get all users.
-   * Accessible by admin and director.
-   * @access admin, director
+   * Accessible by admin.
+   * @access admin
    */
   @Roles(Role.admin)
   @ApiOkResponse({ description: 'Users fetched successfully' })
   @ApiNoContentResponse({ description: 'No users found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized. JWT is missing or invalid.' })
-  @ApiForbiddenResponse({ description: 'Forbidden. Only admin and director roles allowed.' })
+  @ApiForbiddenResponse({ description: 'Forbidden. Only admin role allowed.' })
   @ApiOperation({ summary: 'Find all users' })
   @Get()
   findAll() {
@@ -117,7 +117,7 @@ export class UserController {
       default: {
         summary: 'Sample update user payload',
         value: {
-          role: 'director',
+          role: 'admin',
           info: {
             firstName: 'Janet',
             lastName: 'Doe'
