@@ -29,7 +29,7 @@ lerna-debug.log*
 *.sublime-workspace
 
 #Database
-.db.sqlite3
+db.sqlite
 
 # IDE - VSCode
 .vscode/*
