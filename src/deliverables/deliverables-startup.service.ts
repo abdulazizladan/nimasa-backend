@@ -13,8 +13,10 @@ import { DeliverablesService } from './deliverables.service';
  *
  *    Only rows not yet migrated are copied. Each copy keeps its original id, figures and dates;
  *    the source row is kept and stamped with migratedAt, never deleted.
- * 2. Starts the agency priority-area list from the areas agency deliverables use (once).
- * 3. Renumbers deliverables whose serial numbers clash on a list (serial numbers are now
+ * 2. Removes the old "priority area names are unique across all lists" constraint (once), so the
+ *    national and agency lists can each have an area with the same name.
+ * 3. Starts the agency priority-area list from the areas agency deliverables use (once).
+ * 4. Renumbers deliverables whose serial numbers clash on a list (serial numbers are now
  *    assigned automatically; this repairs numbers entered by hand before that).
  *
  * Both steps do nothing once the data is in order.
@@ -39,6 +41,13 @@ export class DeliverablesStartupService implements OnApplicationBootstrap {
             this.logger.error('Ministerial deliverables migration failed', err as Error);
         }
         try {
+            if (await this.dropLegacyPriorityAreaUnique()) {
+                this.logger.log('Removed the old unique-name constraint from priority areas.');
+            }
+        } catch (err) {
+            this.logger.error('Updating the priority areas table failed', err as Error);
+        }
+        try {
             const seeded = await this.deliverablesService.seedAgencyPriorityAreas();
             if (seeded > 0) {
                 this.logger.log(`Started the agency priority-area list with ${seeded} area(s) used by agency deliverables.`);
@@ -54,6 +63,32 @@ export class DeliverablesStartupService implements OnApplicationBootstrap {
         } catch (err) {
             this.logger.error('Serial number repair failed', err as Error);
         }
+    }
+
+    /**
+     * Priority area names used to be unique across all areas. TypeORM's schema sync never drops
+     * that constraint, so rebuild the (small) table without it when it is still there. SQLite only.
+     */
+    async dropLegacyPriorityAreaUnique(): Promise<boolean> {
+        if (this.dataSource.options.type !== 'sqlite') return false;
+        const [table] = await this.dataSource.query(
+            `SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'presidential_priority_areas'`
+        );
+        if (!table?.sql || !/UNIQUE \("name"\)/.test(table.sql)) return false;
+
+        const columns = '"id", "name", "description", "createdAt", "updatedAt", "scope"';
+        await this.dataSource.transaction(async (manager) => {
+            await manager.query(`CREATE TABLE "temporary_presidential_priority_areas" (
+                "id" varchar PRIMARY KEY NOT NULL, "name" text NOT NULL, "description" text,
+                "createdAt" datetime NOT NULL DEFAULT (datetime('now')),
+                "updatedAt" datetime NOT NULL DEFAULT (datetime('now')),
+                "scope" varchar NOT NULL DEFAULT ('national'))`);
+            await manager.query(`INSERT INTO "temporary_presidential_priority_areas" (${columns})
+                SELECT ${columns} FROM "presidential_priority_areas"`);
+            await manager.query(`DROP TABLE "presidential_priority_areas"`);
+            await manager.query(`ALTER TABLE "temporary_presidential_priority_areas" RENAME TO "presidential_priority_areas"`);
+        });
+        return true;
     }
 
     async migrateMinisterial(): Promise<number> {

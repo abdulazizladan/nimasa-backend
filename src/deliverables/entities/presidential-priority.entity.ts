@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 /**
  * Which deliverables pages a priority area belongs to: presidential and ministerial deliverables
@@ -7,8 +7,9 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 export const PRIORITY_AREA_SCOPES = ['national', 'agency'] as const;
 export type PriorityAreaScope = typeof PRIORITY_AREA_SCOPES[number];
 
+// Names are unique within a list (scope). DeliverablesService enforces that rather than a database
+// constraint: TypeORM's SQLite sync mixes up overlapping unique constraints (name vs name + scope).
 @Entity('presidential_priority_areas')
-@Unique(['name', 'scope'])
 export class PresidentialPriorityArea {
     @PrimaryGeneratedColumn('uuid')
     id: string;
